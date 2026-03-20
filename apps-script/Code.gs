@@ -1,0 +1,125 @@
+/**
+ * Costa Sur Proveedores — Google Apps Script
+ *
+ * Handles provider submissions and serves approved providers as JSON.
+ *
+ * Sheet structure (single sheet "Proveedores"):
+ * Row 1: Headers
+ * Columns: Timestamp | Nombre | Categoria | Servicio | Telefono | Correo |
+ *          Comunidad | Casa | Recomendado Por | Comentario | Estado
+ *
+ * "Estado" column: leave blank or set to "pendiente" for new submissions.
+ * Set to "aprobado" to make the provider visible on the site.
+ * Set to "rechazado" to hide permanently.
+ */
+
+var SHEET_NAME = 'Proveedores';
+
+function getSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow([
+      'Timestamp', 'Nombre', 'Categoria', 'Servicio', 'Telefono',
+      'Correo', 'Comunidad', 'Casa', 'Recomendado Por', 'Comentario', 'Estado'
+    ]);
+    // Format header row
+    sheet.getRange(1, 1, 1, 11).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// GET — return approved providers as JSON
+function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || 'providers';
+
+  if (action === 'providers') {
+    return serveProviders();
+  }
+
+  return ContentService.createTextOutput(
+    JSON.stringify({ error: 'Unknown action' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function serveProviders() {
+  var sheet = getSheet();
+  var data = sheet.getDataRange().getValues();
+  var providersMap = {};
+  var providersList = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var estado = String(data[i][10] || '').trim().toLowerCase();
+    if (estado !== 'aprobado') continue;
+
+    var nombre = String(data[i][1] || '').trim();
+    var categoria = String(data[i][2] || '').trim();
+    var servicio = String(data[i][3] || '').trim();
+    var telefono = String(data[i][4] || '').trim();
+    var correo = String(data[i][5] || '').trim();
+    var comunidad = String(data[i][6] || '').trim();
+    var casa = String(data[i][7] || '').trim();
+
+    // Group by provider (name + phone as key)
+    var key = nombre.toLowerCase() + '|' + telefono;
+
+    if (!providersMap[key]) {
+      providersMap[key] = {
+        id: String(i),
+        name: nombre,
+        category: categoria,
+        service: servicio,
+        phone: telefono,
+        email: correo || null,
+        recommendations: []
+      };
+      providersList.push(providersMap[key]);
+    }
+
+    providersMap[key].recommendations.push({
+      community: comunidad,
+      house_number: casa
+    });
+  }
+
+  // Compute counts
+  for (var j = 0; j < providersList.length; j++) {
+    var p = providersList[j];
+    p.recCount = p.recommendations.length;
+    var communities = {};
+    for (var k = 0; k < p.recommendations.length; k++) {
+      communities[p.recommendations[k].community] = true;
+    }
+    p.communityCount = Object.keys(communities).length;
+  }
+
+  return ContentService.createTextOutput(
+    JSON.stringify({ providers: providersList })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+// POST — save a new provider recommendation
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+
+  var sheet = getSheet();
+  sheet.appendRow([
+    new Date(),
+    data.nombre || '',
+    data.categoria || '',
+    data.servicio || '',
+    data.telefono || '',
+    data.correo || '',
+    data.comunidad || '',
+    data.casa || '',
+    data.recomendadoPor || '',
+    data.comentario || '',
+    'pendiente'
+  ]);
+
+  return ContentService.createTextOutput(
+    JSON.stringify({ status: 'ok' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}

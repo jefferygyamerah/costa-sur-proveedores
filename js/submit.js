@@ -4,18 +4,6 @@
 (function () {
   'use strict';
 
-  async function populateCommunities() {
-    var communities = await window.CostaSurDB.fetchCommunities();
-    var select = document.getElementById('sug-comunidad');
-    if (!select) return;
-    for (var i = 0; i < communities.length; i++) {
-      var opt = document.createElement('option');
-      opt.value = communities[i].slug;
-      opt.textContent = communities[i].name;
-      select.appendChild(opt);
-    }
-  }
-
   function submitSuggest() {
     var nombre = (document.getElementById('sug-nombre').value || '').trim();
     var categoria = document.getElementById('sug-categoria').value;
@@ -82,8 +70,4 @@
 
   window._submitSuggest = submitSuggest;
   window._resetForm = resetForm;
-
-  document.addEventListener('DOMContentLoaded', function () {
-    populateCommunities();
-  });
 })();

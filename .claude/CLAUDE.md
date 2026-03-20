@@ -9,19 +9,20 @@ Local trades and home services only (plumbers, AC repair, gardening, fumigation,
 ## Stack
 
 - Static frontend: vanilla HTML/CSS/JS, no framework
-- Backend: Supabase (Postgres + auto-generated REST API)
-- Deploy: GitHub Pages, Netlify, or Cloudflare Pages
+- Backend: Google Sheets + Apps Script (same pattern as Villa Valencia portal)
+- Deploy: GitHub Pages or similar static hosting
 
-## Data Model
+## How It Works
 
-- `providers` — name, category, service, phone, email, status (pending/approved)
-- `recommendations` — links provider to a community + house_number, with optional comment
-- `communities` — reference table of known residential communities
+- `apps-script/Code.gs` handles POST (submissions) and GET (approved providers as JSON)
+- Google Sheet has one sheet "Proveedores" with an "Estado" column
+- New submissions land as "pendiente" — set to "aprobado" in the sheet to publish
+- The frontend fetches approved providers via GET and renders them
+- Falls back to demo data if Apps Script URL not configured
 
 ## Conventions
 
 - Spanish primary language
 - Mobile-first CSS
 - Category slugs: `aires`, `catering`, `jardineria`, `linea-blanca`, `plomeria`, `general`, `fumigacion`, `techo`, `solar`, `vidrios`
-- Submissions go to `pending` status — admin approves via Supabase dashboard
 - Do NOT update `~/claude-assistant/knowledge/`, MEMORY.md, or task backlog
