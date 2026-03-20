@@ -447,24 +447,44 @@ function migrateComentariosToResenas() {
   var votosSheet = getVotosSheet();
   var provData = provSheet.getDataRange().getValues();
 
-  // Columns: 0=Timestamp, 1=Nombre, 2=Categoria, 3=Servicio, 4=Telefono,
-  //          5=Correo, 6=Comunidad, 7=Casa, 8=Recomendado Por, 9=Comentario, 10=Estado
+  // Find columns by header name (case-insensitive, trimmed)
+  var headers = provData[0].map(function (h) { return String(h).trim().toLowerCase(); });
+  function col(name) {
+    var idx = headers.indexOf(name.toLowerCase());
+    if (idx === -1) Logger.log('WARNING: column "' + name + '" not found. Headers: ' + headers.join(', '));
+    return idx;
+  }
+
+  var iNombre = col('Nombre');
+  var iTelefono = col('Telefono');
+  var iComunidad = col('Comunidad');
+  var iCasa = col('Casa');
+  var iRecomendadoPor = col('Recomendado Por');
+  var iComentario = col('Comentario');
+  var iEstado = col('Estado');
+
+  Logger.log('Sheet: ' + provSheet.getName() + ', Rows: ' + provData.length + ', Headers: ' + headers.join(' | '));
+
+  if (iComentario === -1 || iEstado === -1) {
+    Logger.log('ABORT: Could not find Comentario or Estado column.');
+    return { migrated: 0, skipped: 0, error: 'Missing columns' };
+  }
 
   var migrated = 0;
   var skipped = 0;
 
   for (var i = 1; i < provData.length; i++) {
-    var comentario = String(provData[i][9] || '').trim();
+    var comentario = String(provData[i][iComentario] || '').trim();
     if (!comentario) { skipped++; continue; }
 
-    var estado = String(provData[i][10] || '').trim().toLowerCase();
+    var estado = String(provData[i][iEstado] || '').trim().toLowerCase();
     if (estado !== 'aprobado') { skipped++; continue; }
 
-    var nombre = String(provData[i][1] || '').trim();
-    var telefono = String(provData[i][4] || '').trim();
-    var comunidad = String(provData[i][6] || '').trim();
-    var casa = String(provData[i][7] || '').trim();
-    var recomendadoPor = String(provData[i][8] || '').trim();
+    var nombre = String(iNombre >= 0 ? provData[i][iNombre] : '').trim();
+    var telefono = String(iTelefono >= 0 ? provData[i][iTelefono] : '').trim();
+    var comunidad = String(iComunidad >= 0 ? provData[i][iComunidad] : '').trim();
+    var casa = String(iCasa >= 0 ? provData[i][iCasa] : '').trim();
+    var recomendadoPor = String(iRecomendadoPor >= 0 ? provData[i][iRecomendadoPor] : '').trim();
 
     var providerKey = makeProviderKey(nombre, telefono);
     var householdKey = makeHouseholdKey(comunidad, casa);
