@@ -424,3 +424,59 @@ function serveProviders(comunidad, casa) {
     JSON.stringify({ success: true, data: { providers: providersList } })
   ).setMimeType(ContentService.MimeType.JSON);
 }
+
+// ---------------------------------------------------------------------------
+// ONE-TIME MIGRATION: Move Comentario from Proveedores into Resenas sheet
+// Run manually from Apps Script editor: Run > migrateComentariosToResenas
+// ---------------------------------------------------------------------------
+
+function migrateComentariosToResenas() {
+  var provSheet = getProveedoresSheet();
+  var resenasSheet = getResenasSheet();
+  var provData = provSheet.getDataRange().getValues();
+
+  // Columns: 0=Timestamp, 1=Nombre, 2=Categoria, 3=Servicio, 4=Telefono,
+  //          5=Correo, 6=Comunidad, 7=Casa, 8=Recomendado Por, 9=Comentario, 10=Estado
+
+  var migrated = 0;
+  var skipped = 0;
+
+  for (var i = 1; i < provData.length; i++) {
+    var comentario = String(provData[i][9] || '').trim();
+    if (!comentario) { skipped++; continue; }
+
+    var estado = String(provData[i][10] || '').trim().toLowerCase();
+    if (estado !== 'aprobado') { skipped++; continue; }
+
+    var nombre = String(provData[i][1] || '').trim();
+    var telefono = String(provData[i][4] || '').trim();
+    var comunidad = String(provData[i][6] || '').trim();
+    var casa = String(provData[i][7] || '').trim();
+    var recomendadoPor = String(provData[i][8] || '').trim();
+
+    var providerKey = makeProviderKey(nombre, telefono);
+    var householdKey = makeHouseholdKey(comunidad, casa);
+    var reviewerName = recomendadoPor || ('Casa ' + casa);
+
+    // Resenas columns: Timestamp | ProviderKey | Comunidad | Casa | HouseholdKey |
+    //                  NombreReviewer | Estrellas | Texto | Estado | ModeradoPor | ModeradoEn
+    resenasSheet.appendRow([
+      new Date(),
+      providerKey,
+      comunidad,
+      casa,
+      householdKey,
+      reviewerName,
+      5,              // Default 5 stars since they recommended the provider
+      comentario,
+      'aprobado',     // Auto-approve since it came from an approved provider entry
+      'migracion',
+      new Date()
+    ]);
+
+    migrated++;
+  }
+
+  Logger.log('Migration complete: ' + migrated + ' reviews created, ' + skipped + ' rows skipped (no comentario or not aprobado).');
+  return { migrated: migrated, skipped: skipped };
+}
