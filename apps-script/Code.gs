@@ -187,6 +187,17 @@ function handleSubmit(data) {
     data.comentario || '',
     'pendiente'
   ]);
+
+  // Auto-upvote from the recommender
+  var comunidad = String(data.comunidad || '').trim();
+  var casa = String(data.casa || '').trim();
+  if (comunidad && casa) {
+    var providerKey = makeProviderKey(data.nombre, data.telefono);
+    var householdKey = makeHouseholdKey(comunidad, casa);
+    var votosSheet = getVotosSheet();
+    votosSheet.appendRow([new Date(), providerKey, comunidad, casa, householdKey, 1]);
+  }
+
   return jsonOk({ status: 'ok' });
 }
 
@@ -433,6 +444,7 @@ function serveProviders(comunidad, casa) {
 function migrateComentariosToResenas() {
   var provSheet = getProveedoresSheet();
   var resenasSheet = getResenasSheet();
+  var votosSheet = getVotosSheet();
   var provData = provSheet.getDataRange().getValues();
 
   // Columns: 0=Timestamp, 1=Nombre, 2=Categoria, 3=Servicio, 4=Telefono,
@@ -472,6 +484,11 @@ function migrateComentariosToResenas() {
       'aprobado',     // Auto-approve since it came from an approved provider entry
       'migracion',
       new Date()
+    ]);
+
+    // Also create an upvote from the recommender
+    votosSheet.appendRow([
+      new Date(), providerKey, comunidad, casa, householdKey, 1
     ]);
 
     migrated++;
