@@ -213,6 +213,9 @@
     return null;
   }
 
+  // Pending vote awaiting review submission
+  var pendingVote = null;
+
   function handleVoteClick(e) {
     var btn = e.target.closest('.vote-btn');
     if (!btn) return;
@@ -225,45 +228,19 @@
     if (!p) return;
 
     window.CostaSurAuth.requireIdentity(function (identity) {
-      var prevVote = p.userVote;
-      var prevScore = p.voteScore || 0;
+      // Store pending vote — it will be submitted after the review
+      pendingVote = { pk: pk, dir: dir, identity: identity };
 
-      // Toggle: if same vote, we still send it (backend overwrites)
-      p.userVote = dir;
-      p.voteScore = prevScore - (prevVote || 0) + dir;
-
-      // Optimistic UI update
-      updateVoteWidgets(pk, p);
-
-      window.CostaSurDB.submitVote({
-        providerKey: pk,
-        comunidad: identity.comunidad,
-        casa: identity.casa,
-        voto: dir
-      }).then(function (result) {
-        if (result.ok) {
-          if (result.voteScore !== undefined) p.voteScore = result.voteScore;
-          if (result.userVote !== undefined) p.userVote = result.userVote;
-          // After upvote, open detail modal with review form visible
-          if (dir === 1) {
-            openDetail(pk);
-            // Auto-show the review form so the user is prompted to leave a review
-            setTimeout(function () {
-              var btnShow = document.getElementById('btnWriteReview');
-              var form = document.getElementById('reviewForm');
-              if (btnShow && form) {
-                form.style.display = '';
-                btnShow.style.display = 'none';
-              }
-            }, 100);
-          }
-        } else {
-          // Revert
-          p.userVote = prevVote;
-          p.voteScore = prevScore;
+      // Open detail modal with review form auto-shown
+      openDetail(pk);
+      setTimeout(function () {
+        var btnShow = document.getElementById('btnWriteReview');
+        var form = document.getElementById('reviewForm');
+        if (btnShow && form) {
+          form.style.display = '';
+          btnShow.style.display = 'none';
         }
-        updateVoteWidgets(pk, p);
-      });
+      }, 100);
     });
   }
 
@@ -383,6 +360,8 @@
 
   function closeDetail() {
     document.getElementById('detailModal').classList.remove('open');
+    // Discard any pending vote that wasn't completed with a review
+    pendingVote = null;
   }
 
   // ------------------------------------------------------------------
@@ -444,6 +423,24 @@
         }).then(function (result) {
           if (result.ok) {
             form.innerHTML = '<p class="review-success">Rese\u00f1a enviada. Ser\u00e1 visible una vez aprobada.</p>';
+            // Submit the pending vote now that the review is done
+            if (pendingVote && pendingVote.pk === pk) {
+              var vote = pendingVote;
+              pendingVote = null;
+              var p = findProvider(pk);
+              window.CostaSurDB.submitVote({
+                providerKey: pk,
+                comunidad: vote.identity.comunidad,
+                casa: vote.identity.casa,
+                voto: vote.dir
+              }).then(function (voteResult) {
+                if (p && voteResult.ok) {
+                  if (voteResult.voteScore !== undefined) p.voteScore = voteResult.voteScore;
+                  if (voteResult.userVote !== undefined) p.userVote = voteResult.userVote;
+                }
+                if (p) updateVoteWidgets(pk, p);
+              });
+            }
           } else {
             alert('Error: ' + (result.error || 'Intenta de nuevo.'));
             btnSubmit.disabled = false;
