@@ -159,24 +159,24 @@
 
   function getDemoProviders() {
     var demo = [
-      { providerKey:'raul-moreno-65887198', nombre:'Ra\u00fal Moreno', categoria:'aires', servicio:'Limpieza, reparaci\u00f3n e instalaci\u00f3n de aires acondicionados', telefono:'6588-7198', correo:null },
-      { providerKey:'cheffy-le-cheff-2691220', nombre:'Cheffy Le Cheff', categoria:'catering', servicio:'Catering, comida y equipo para fiestas', telefono:'269-1220', correo:'Ventas@cheffylecheff.com' },
-      { providerKey:'hector-canate-64617563', nombre:'H\u00e9ctor Ca\u00f1ate', categoria:'jardineria', servicio:'Jardiner\u00eda', telefono:'6461-7563', correo:null },
-      { providerKey:'antonio-69838544', nombre:'Antonio', categoria:'linea-blanca', servicio:'Lavadoras, secadoras \u2014 reparaci\u00f3n y mantenimiento', telefono:'6983-8544', correo:null },
-      { providerKey:'dario-hernandez-66344065', nombre:'Dario Hernandez', categoria:'plomeria', servicio:'Plomer\u00eda', telefono:'6634-4065', correo:null },
-      { providerKey:'marcos-sanchez-64846335', nombre:'Marcos Sanchez', categoria:'general', servicio:'Trabajos generales: pintura, techo, alba\u00f1iler\u00eda', telefono:'6484-6335', correo:null },
-      { providerKey:'felix-68134069', nombre:'Felix', categoria:'aires', servicio:'Aires acondicionados \u2014 instalaci\u00f3n y mantenimiento', telefono:'6813-4069', correo:null },
-      { providerKey:'alexis-angulo-63203154', nombre:'Alexis Angulo', categoria:'fumigacion', servicio:'Fumigaci\u00f3n', telefono:'6320-3154', correo:null },
-      { providerKey:'norbing-mercado-65802214', nombre:'Norbing Mercado', categoria:'jardineria', servicio:'Jardiner\u00eda', telefono:'6580-2214', correo:null },
-      { providerKey:'carlos-yanez-64870098', nombre:'Carlos Ya\u00f1ez', categoria:'techo', servicio:'Techo y canales de techo', telefono:'6487-0098', correo:null },
-      { providerKey:'wa-engineering-solutions-69985838', nombre:'W&A Engineering Solutions', categoria:'solar', servicio:'Instalaci\u00f3n y mantenimiento de paneles solares', telefono:'6998-5838', correo:null },
-      { providerKey:'vidrios-y-aluminio-mega-64158511', nombre:'Vidrios y Aluminio Mega', categoria:'vidrios', servicio:'Ventanas y vidrios', telefono:'6415-8511', correo:null }
+      { providerKey:'raul-moreno-65887198', nombre:'Ra\u00fal Moreno', categoria:'aires', servicio:'Limpieza, reparaci\u00f3n e instalaci\u00f3n de aires acondicionados', telefono:'6588-7198', correo:null, casa:'98' },
+      { providerKey:'cheffy-le-cheff-2691220', nombre:'Cheffy Le Cheff', categoria:'catering', servicio:'Catering, comida y equipo para fiestas', telefono:'269-1220', correo:'Ventas@cheffylecheff.com', casa:'60' },
+      { providerKey:'hector-canate-64617563', nombre:'H\u00e9ctor Ca\u00f1ate', categoria:'jardineria', servicio:'Jardiner\u00eda', telefono:'6461-7563', correo:null, casa:'98' },
+      { providerKey:'antonio-69838544', nombre:'Antonio', categoria:'linea-blanca', servicio:'Lavadoras, secadoras \u2014 reparaci\u00f3n y mantenimiento', telefono:'6983-8544', correo:null, casa:'98' },
+      { providerKey:'dario-hernandez-66344065', nombre:'Dario Hernandez', categoria:'plomeria', servicio:'Plomer\u00eda', telefono:'6634-4065', correo:null, casa:'104' },
+      { providerKey:'marcos-sanchez-64846335', nombre:'Marcos Sanchez', categoria:'general', servicio:'Trabajos generales: pintura, techo, alba\u00f1iler\u00eda', telefono:'6484-6335', correo:null, casa:'104' },
+      { providerKey:'felix-68134069', nombre:'Felix', categoria:'aires', servicio:'Aires acondicionados \u2014 instalaci\u00f3n y mantenimiento', telefono:'6813-4069', correo:null, casa:'104' },
+      { providerKey:'alexis-angulo-63203154', nombre:'Alexis Angulo', categoria:'fumigacion', servicio:'Fumigaci\u00f3n', telefono:'6320-3154', correo:null, casa:'104' },
+      { providerKey:'norbing-mercado-65802214', nombre:'Norbing Mercado', categoria:'jardineria', servicio:'Jardiner\u00eda', telefono:'6580-2214', correo:null, casa:'104' },
+      { providerKey:'carlos-yanez-64870098', nombre:'Carlos Ya\u00f1ez', categoria:'techo', servicio:'Techo y canales de techo', telefono:'6487-0098', correo:null, casa:'104' },
+      { providerKey:'wa-engineering-solutions-69985838', nombre:'W&A Engineering Solutions', categoria:'solar', servicio:'Instalaci\u00f3n y mantenimiento de paneles solares', telefono:'6998-5838', correo:null, casa:'66' },
+      { providerKey:'vidrios-y-aluminio-mega-64158511', nombre:'Vidrios y Aluminio Mega', categoria:'vidrios', servicio:'Ventanas y vidrios', telefono:'6415-8511', correo:null, casa:'89' }
     ];
     return demo.map(function (p) {
       return Object.assign({}, p, {
         recCount: 1,
         communityCount: 1,
-        recommendations: [{ community: 'Villa Valencia', house_number: '104' }],
+        recommendations: [{ community: 'Villa Valencia', house_number: p.casa }],
         voteScore: 0,
         userVote: null,
         reviewCount: 0,

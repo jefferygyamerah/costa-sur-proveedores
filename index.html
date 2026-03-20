@@ -70,7 +70,8 @@
 <div class="main-sidebar">
   <!-- SIDEBAR -->
   <div>
-    <div class="sidebar-panel">
+    <button class="sidebar-toggle" id="sidebarToggle">Filtrar por categoria</button>
+    <div class="sidebar-panel collapsed" id="sidebarPanel">
       <div class="sidebar-title">Filtrar por categoria</div>
       <button class="cat-btn active" onclick="window._filterCat('all',this)"><span class="cat-icon">&#x1F50D;</span>Todos<span class="cat-count" id="cnt-all">0</span></button>
       <button class="cat-btn" onclick="window._filterCat('aires',this)"><span class="cat-icon">&#x2744;&#xFE0F;</span>Aires Acondicionados<span class="cat-count" id="cnt-aires">0</span></button>

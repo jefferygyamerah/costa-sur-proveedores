@@ -71,6 +71,32 @@ function makeProviderKey(nombre, telefono) {
 // Text sanitization
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Category inference from service description
+// ---------------------------------------------------------------------------
+
+function guessCategoria(servicio) {
+  var s = String(servicio || '').toLowerCase();
+  var rules = [
+    ['aires', ['aire', 'a/c', 'acondicionado', 'clima']],
+    ['catering', ['catering', 'comida', 'fiesta', 'evento']],
+    ['jardineria', ['jardin', 'jardiner']],
+    ['linea-blanca', ['lavadora', 'secadora', 'linea blanca', 'línea blanca', 'electrodom']],
+    ['plomeria', ['plomer', 'plomero']],
+    ['fumigacion', ['fumiga']],
+    ['techo', ['techo', 'canal', 'gotera']],
+    ['solar', ['solar', 'panel']],
+    ['vidrios', ['vidrio', 'aluminio', 'ventana']],
+    ['general', ['pintura', 'alba', 'constructor', 'general', 'acarreo', 'reparaci']]
+  ];
+  for (var i = 0; i < rules.length; i++) {
+    for (var j = 0; j < rules[i][1].length; j++) {
+      if (s.indexOf(rules[i][1][j]) !== -1) return rules[i][0];
+    }
+  }
+  return 'general';
+}
+
 function sanitize(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -295,6 +321,7 @@ function serveProviders(comunidad, casa) {
     var nombre = String(provData[i][1] || '').trim();
     var categoria = String(provData[i][2] || '').trim();
     var servicio = String(provData[i][3] || '').trim();
+    if (!categoria) categoria = guessCategoria(servicio);
     var telefono = String(provData[i][4] || '').trim();
     var correo = String(provData[i][5] || '').trim();
     var com = String(provData[i][6] || '').trim();

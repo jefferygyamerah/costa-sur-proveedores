@@ -22,6 +22,30 @@
   var providers = [];
   var currentCat = 'all';
 
+  // Infer category from servicio text when categoria is missing
+  var CAT_KEYWORDS = [
+    { cat: 'aires', words: ['aire', 'a/c', 'acondicionado', 'clima'] },
+    { cat: 'catering', words: ['catering', 'comida', 'fiesta', 'evento'] },
+    { cat: 'jardineria', words: ['jardin', 'jardiner'] },
+    { cat: 'linea-blanca', words: ['lavadora', 'secadora', 'linea blanca', 'línea blanca', 'electrodom'] },
+    { cat: 'plomeria', words: ['plomer', 'plomero'] },
+    { cat: 'fumigacion', words: ['fumiga'] },
+    { cat: 'techo', words: ['techo', 'canal', 'gotera'] },
+    { cat: 'solar', words: ['solar', 'panel'] },
+    { cat: 'vidrios', words: ['vidrio', 'aluminio', 'ventana'] },
+    { cat: 'general', words: ['pintura', 'alba', 'constructor', 'general', 'acarreo', 'reparaci'] }
+  ];
+
+  function guessCategory(servicio) {
+    var s = (servicio || '').toLowerCase();
+    for (var i = 0; i < CAT_KEYWORDS.length; i++) {
+      for (var j = 0; j < CAT_KEYWORDS[i].words.length; j++) {
+        if (s.indexOf(CAT_KEYWORDS[i].words[j]) !== -1) return CAT_KEYWORDS[i].cat;
+      }
+    }
+    return 'general';
+  }
+
   function catInfo(cat) {
     return CATEGORIES[cat] || { icon: '\uD83D\uDD27', label: cat };
   }
@@ -469,15 +493,35 @@
     });
   }
 
+  function setupSidebarToggle() {
+    var btn = document.getElementById('sidebarToggle');
+    var panel = document.getElementById('sidebarPanel');
+    if (!btn || !panel) return;
+    // Start expanded on desktop
+    if (window.innerWidth > 768) panel.classList.remove('collapsed');
+    btn.addEventListener('click', function () {
+      panel.classList.toggle('collapsed');
+      btn.classList.toggle('open');
+    });
+  }
+
   window._filterCat = filterCat;
   window._closeDetail = closeDetail;
 
   document.addEventListener('DOMContentLoaded', async function () {
     var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
     providers = await window.CostaSurDB.fetchProviders(identity);
+    // Fill missing categories
+    for (var n = 0; n < providers.length; n++) {
+      var cat = providers[n].categoria || providers[n].category || '';
+      if (!cat) {
+        providers[n].categoria = guessCategory(providers[n].servicio || providers[n].service);
+      }
+    }
     applyFilters();
     setupCardClicks();
     setupModalBackdrops();
     setupSearch();
+    setupSidebarToggle();
   });
 })();
