@@ -1,5 +1,7 @@
 /**
  * Costa Sur Proveedores — Directory logic
+ * Renders provider cards with voting, star ratings, and detail modal
+ * with reviews and review submission.
  */
 (function () {
   'use strict';
@@ -17,25 +19,11 @@
     'vidrios':     { icon: '\uD83E\uDE9F', label: 'Vidrios y Aluminio' }
   };
 
-  var COMMUNITY_NAMES = {
-    'villa-valencia': 'Villa Valencia',
-    'woodlands': 'Woodlands',
-    'caminos-del-sur': 'Caminos del Sur',
-    'green-village': 'Green Village',
-    'panama-pacifico': 'Panama Pacifico',
-    'brisas-del-golf': 'Brisas del Golf',
-    'otro': 'Otra'
-  };
-
   var providers = [];
   var currentCat = 'all';
 
   function catInfo(cat) {
     return CATEGORIES[cat] || { icon: '\uD83D\uDD27', label: cat };
-  }
-
-  function communityName(slug) {
-    return COMMUNITY_NAMES[slug] || slug;
   }
 
   function escapeHtml(str) {
@@ -44,47 +32,98 @@
     return div.innerHTML;
   }
 
-  function trustLabel(p) {
-    if (p.recCount === 0) return '';
-    var parts = p.recCount + ' recomendaci\u00f3n' + (p.recCount > 1 ? 'es' : '');
-    if (p.communityCount > 1) {
-      parts += ' de ' + p.communityCount + ' comunidades';
-    }
-    return parts;
+  // ------------------------------------------------------------------
+  // Stars helper
+  // ------------------------------------------------------------------
+
+  function starsHtml(rating, count) {
+    if (!count) return '';
+    var full = Math.floor(rating);
+    var half = (rating - full) >= 0.3 ? 1 : 0;
+    var empty = 5 - full - half;
+    var s = '<span class="stars">';
+    for (var i = 0; i < full; i++) s += '\u2605';
+    if (half) s += '\u00BD';
+    for (var j = 0; j < empty; j++) s += '<span class="star-empty">\u2605</span>';
+    s += '</span>';
+    s += '<span class="review-count">' + rating.toFixed(1) + ' (' + count + ')</span>';
+    return s;
   }
 
+  // ------------------------------------------------------------------
+  // Vote widget HTML
+  // ------------------------------------------------------------------
+
+  function voteHtml(p) {
+    var upClass = p.userVote === 1 ? ' vote-active' : '';
+    var downClass = p.userVote === -1 ? ' vote-active' : '';
+    return '<div class="vote-widget" data-pk="' + escapeHtml(p.providerKey) + '">' +
+      '<button class="vote-btn vote-up' + upClass + '" data-dir="1" aria-label="Votar a favor">\u25B2</button>' +
+      '<span class="vote-score">' + (p.voteScore || 0) + '</span>' +
+      '<button class="vote-btn vote-down' + downClass + '" data-dir="-1" aria-label="Votar en contra">\u25BC</button>' +
+    '</div>';
+  }
+
+  // ------------------------------------------------------------------
+  // Card rendering
+  // ------------------------------------------------------------------
+
   function renderCard(p) {
-    var c = catInfo(p.category);
-    var trust = trustLabel(p);
-    return '<div class="provider-card" data-id="' + escapeHtml(p.id) + '">' +
-      '<div class="card-top">' +
-        '<div class="card-avatar">' + c.icon + '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div class="card-name">' + escapeHtml(p.name) + '</div>' +
-          '<div class="card-service">' + c.icon + ' ' + escapeHtml(c.label) + '</div>' +
-          (trust ? '<div class="badge-trust">\u2713 ' + escapeHtml(trust) + '</div>' : '') +
+    var c = catInfo(p.categoria || p.category);
+    var name = p.nombre || p.name;
+    var service = p.servicio || p.service;
+    var phone = p.telefono || p.phone;
+    var email = p.correo || p.email;
+    var pk = p.providerKey || p.id;
+
+    var ratingLine = '';
+    if (p.reviewCount > 0) {
+      ratingLine = '<div class="card-rating">' + starsHtml(p.averageRating, p.reviewCount) + '</div>';
+    }
+
+    var recCount = p.recCount || (p.recommendations ? p.recommendations.length : 0);
+    var trustLine = '';
+    if (recCount > 0) {
+      trustLine = '<span class="card-recs">' + recCount + ' rec.</span>';
+    }
+
+    return '<div class="provider-card" data-pk="' + escapeHtml(pk) + '">' +
+      '<div class="card-body">' +
+        voteHtml(p) +
+        '<div class="card-content">' +
+          '<div class="card-name">' + escapeHtml(name) + '</div>' +
+          '<div class="card-category">' + c.icon + ' ' + escapeHtml(c.label) + '</div>' +
+          '<div class="card-service">' + escapeHtml(service) + '</div>' +
+          ratingLine +
+          '<div class="card-meta">' +
+            '<span class="card-phone">' + escapeHtml(phone) + '</span>' +
+            trustLine +
+          '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="card-info">' +
-        '<div class="info-row"><span class="info-icon">\uD83D\uDD27</span><span style="font-size:0.78rem;line-height:1.4">' + escapeHtml(p.service) + '</span></div>' +
-        '<div class="info-row"><span class="info-icon">\uD83D\uDCDE</span><strong>' + escapeHtml(p.phone) + '</strong></div>' +
-        (p.email ? '<div class="info-row"><span class="info-icon">\u2709\uFE0F</span><span style="font-size:0.76rem;word-break:break-all">' + escapeHtml(p.email) + '</span></div>' : '') +
-      '</div>' +
-      '<div class="card-actions">' +
-        '<a class="btn-call" href="tel:' + p.phone.replace(/\D/g, '') + '" onclick="event.stopPropagation()">\uD83D\uDCDE Llamar</a>' +
-        (p.email ? '<a class="btn-email" href="mailto:' + escapeHtml(p.email) + '" onclick="event.stopPropagation()" title="Enviar correo">\u2709\uFE0F</a>' : '') +
+      '<div class="card-footer">' +
+        '<a class="btn-detail" data-pk="' + escapeHtml(pk) + '">Ver detalles</a>' +
+        '<a class="btn-call" href="tel:' + phone.replace(/\D/g, '') + '" onclick="event.stopPropagation()">Llamar</a>' +
       '</div>' +
     '</div>';
   }
 
+  // ------------------------------------------------------------------
+  // Filters
+  // ------------------------------------------------------------------
+
   function applyFilters() {
     var search = document.getElementById('searchInput').value.toLowerCase();
     var filtered = providers.filter(function (p) {
-      var matchCat = currentCat === 'all' || p.category === currentCat;
+      var cat = p.categoria || p.category;
+      var matchCat = currentCat === 'all' || cat === currentCat;
+      var name = (p.nombre || p.name || '').toLowerCase();
+      var service = (p.servicio || p.service || '').toLowerCase();
+      var catLabel = catInfo(cat).label.toLowerCase();
       var matchSearch = !search ||
-        p.name.toLowerCase().indexOf(search) !== -1 ||
-        p.service.toLowerCase().indexOf(search) !== -1 ||
-        catInfo(p.category).label.toLowerCase().indexOf(search) !== -1;
+        name.indexOf(search) !== -1 ||
+        service.indexOf(search) !== -1 ||
+        catLabel.indexOf(search) !== -1;
       return matchCat && matchSearch;
     });
 
@@ -98,14 +137,13 @@
     }
     document.getElementById('gridCount').textContent =
       filtered.length + ' proveedor' + (filtered.length !== 1 ? 'es' : '');
-
     updateCategoryCounts();
   }
 
   function updateCategoryCounts() {
     var counts = { all: providers.length };
     for (var i = 0; i < providers.length; i++) {
-      var cat = providers[i].category;
+      var cat = providers[i].categoria || providers[i].category;
       counts[cat] = (counts[cat] || 0) + 1;
     }
     var countEls = document.querySelectorAll('.cat-count[id]');
@@ -113,7 +151,6 @@
       var key = countEls[j].id.replace('cnt-', '');
       countEls[j].textContent = counts[key] || 0;
     }
-    // Update hero stats
     var statTotal = document.getElementById('statTotal');
     if (statTotal) statTotal.textContent = providers.length;
     var statCommunities = document.getElementById('statCommunities');
@@ -134,89 +171,294 @@
     var btns = document.querySelectorAll('.cat-btn');
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     btn.classList.add('active');
-
     var c = CATEGORIES[cat];
-    document.getElementById('gridTitle').textContent = cat === 'all' ? 'Todos los Proveedores' : (c ? c.label : 'Proveedores');
+    document.getElementById('gridTitle').textContent =
+      cat === 'all' ? 'Todos los Proveedores' : (c ? c.label : 'Proveedores');
     applyFilters();
   }
 
-  function openDetail(id) {
-    var p = null;
+  // ------------------------------------------------------------------
+  // Voting
+  // ------------------------------------------------------------------
+
+  function findProvider(pk) {
     for (var i = 0; i < providers.length; i++) {
-      if (providers[i].id === id || providers[i].id === String(id)) { p = providers[i]; break; }
+      var k = providers[i].providerKey || providers[i].id;
+      if (k === pk) return providers[i];
     }
+    return null;
+  }
+
+  function handleVoteClick(e) {
+    var btn = e.target.closest('.vote-btn');
+    if (!btn) return;
+    e.stopPropagation();
+
+    var widget = btn.closest('.vote-widget');
+    var pk = widget.getAttribute('data-pk');
+    var dir = Number(btn.getAttribute('data-dir'));
+    var p = findProvider(pk);
     if (!p) return;
 
-    var c = catInfo(p.category);
-    var trust = trustLabel(p);
+    window.CostaSurAuth.requireIdentity(function (identity) {
+      var prevVote = p.userVote;
+      var prevScore = p.voteScore || 0;
+
+      // Toggle: if same vote, we still send it (backend overwrites)
+      p.userVote = dir;
+      p.voteScore = prevScore - (prevVote || 0) + dir;
+
+      // Optimistic UI update
+      updateVoteWidgets(pk, p);
+
+      window.CostaSurDB.submitVote({
+        providerKey: pk,
+        comunidad: identity.comunidad,
+        casa: identity.casa,
+        voto: dir
+      }).then(function (result) {
+        if (result.ok) {
+          if (result.voteScore !== undefined) p.voteScore = result.voteScore;
+          if (result.userVote !== undefined) p.userVote = result.userVote;
+        } else {
+          // Revert
+          p.userVote = prevVote;
+          p.voteScore = prevScore;
+        }
+        updateVoteWidgets(pk, p);
+      });
+    });
+  }
+
+  function updateVoteWidgets(pk, p) {
+    var widgets = document.querySelectorAll('.vote-widget[data-pk="' + pk + '"]');
+    for (var i = 0; i < widgets.length; i++) {
+      var w = widgets[i];
+      w.querySelector('.vote-score').textContent = p.voteScore || 0;
+      var up = w.querySelector('.vote-up');
+      var down = w.querySelector('.vote-down');
+      up.classList.toggle('vote-active', p.userVote === 1);
+      down.classList.toggle('vote-active', p.userVote === -1);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Detail modal
+  // ------------------------------------------------------------------
+
+  function openDetail(pk) {
+    var p = findProvider(pk);
+    if (!p) return;
+
+    var c = catInfo(p.categoria || p.category);
+    var name = p.nombre || p.name;
+    var service = p.servicio || p.service;
+    var phone = p.telefono || p.phone;
+    var email = p.correo || p.email;
     var recs = p.recommendations || [];
 
+    // Reviews section
+    var reviewsHtml = '';
+    if (p.reviews && p.reviews.length > 0) {
+      reviewsHtml = '<div class="detail-reviews"><div class="detail-section-title">Rese\u00f1as</div>';
+      for (var r = 0; r < p.reviews.length; r++) {
+        var rev = p.reviews[r];
+        var revStars = '';
+        for (var s = 0; s < 5; s++) {
+          revStars += s < rev.estrellas ? '\u2605' : '<span class="star-empty">\u2605</span>';
+        }
+        reviewsHtml += '<div class="review-item">' +
+          '<div class="review-header">' +
+            '<span class="review-author">' + escapeHtml(rev.nombreReviewer) + '</span>' +
+            '<span class="review-stars">' + revStars + '</span>' +
+          '</div>' +
+          '<p class="review-text">' + escapeHtml(rev.texto) + '</p>' +
+        '</div>';
+      }
+      reviewsHtml += '</div>';
+    } else {
+      reviewsHtml = '<div class="detail-reviews">' +
+        '<div class="detail-section-title">Rese\u00f1as</div>' +
+        '<p class="review-empty">A\u00fan no hay rese\u00f1as aprobadas.</p>' +
+      '</div>';
+    }
+
+    // Recommendations
     var recsHtml = '';
     if (recs.length > 0) {
-      recsHtml = '<div class="detail-recs"><div class="detail-recs-title">Recomendaciones</div>';
+      recsHtml = '<div class="detail-recs"><div class="detail-section-title">Recomendaciones</div>';
       for (var j = 0; j < recs.length; j++) {
-        var r = recs[j];
         recsHtml += '<div class="rec-item">' +
-          '<span>\uD83C\uDFE1</span>' +
-          '<span class="rec-community">' + escapeHtml(communityName(r.community)) + '</span>' +
-          '<span class="rec-house">Casa ' + escapeHtml(r.house_number) + '</span>' +
+          '<span class="rec-community">' + escapeHtml(recs[j].community) + '</span>' +
+          '<span class="rec-house">Casa ' + escapeHtml(recs[j].house_number) + '</span>' +
         '</div>';
       }
       recsHtml += '</div>';
     }
 
+    // Rating line
+    var ratingLine = '';
+    if (p.reviewCount > 0) {
+      ratingLine = '<div class="detail-rating">' + starsHtml(p.averageRating, p.reviewCount) + '</div>';
+    }
+
     document.getElementById('detailContent').innerHTML =
       '<div class="detail-header">' +
-        '<div style="display:flex;gap:0.75rem;align-items:flex-start;flex:1">' +
-          '<div class="detail-avatar">' + c.icon + '</div>' +
-          '<div>' +
-            '<div class="detail-name">' + escapeHtml(p.name) + '</div>' +
-            '<div class="card-service" style="margin-bottom:0.4rem">' + c.icon + ' ' + escapeHtml(c.label) + '</div>' +
-            (trust ? '<div class="badge-trust">\u2713 ' + escapeHtml(trust) + '</div>' : '') +
-          '</div>' +
+        '<div class="detail-info">' +
+          '<div class="detail-name">' + escapeHtml(name) + '</div>' +
+          '<div class="detail-cat">' + c.icon + ' ' + escapeHtml(c.label) + '</div>' +
+          ratingLine +
         '</div>' +
-        '<button onclick="window._closeDetail()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-light);flex-shrink:0">\u2715</button>' +
+        '<button class="detail-close" onclick="window._closeDetail()">\u2715</button>' +
       '</div>' +
-      '<hr class="detail-divider"/>' +
-      '<div class="detail-row"><span class="detail-label">\uD83D\uDD27 Servicio</span><span class="detail-val">' + escapeHtml(p.service) + '</span></div>' +
-      '<div class="detail-row"><span class="detail-label">\uD83D\uDCDE Tel\u00e9fono</span><span class="detail-val">' + escapeHtml(p.phone) + '</span></div>' +
-      (p.email ? '<div class="detail-row"><span class="detail-label">\u2709\uFE0F Correo</span><span class="detail-val" style="word-break:break-all">' + escapeHtml(p.email) + '</span></div>' : '') +
+      '<div class="detail-body">' +
+        '<div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">' + escapeHtml(service) + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Tel\u00e9fono</span><span class="detail-val">' + escapeHtml(phone) + '</span></div>' +
+        (email ? '<div class="detail-row"><span class="detail-label">Correo</span><span class="detail-val">' + escapeHtml(email) + '</span></div>' : '') +
+      '</div>' +
+      '<div class="detail-vote">' + voteHtml(p) + '</div>' +
       recsHtml +
+      reviewsHtml +
+      '<button class="btn-write-review" id="btnWriteReview">Escribir rese\u00f1a</button>' +
+      '<div class="review-form" id="reviewForm" style="display:none">' +
+        '<div class="detail-section-title">Tu rese\u00f1a</div>' +
+        '<div class="star-picker" id="starPicker">' +
+          '<span class="star-pick" data-val="1">\u2605</span>' +
+          '<span class="star-pick" data-val="2">\u2605</span>' +
+          '<span class="star-pick" data-val="3">\u2605</span>' +
+          '<span class="star-pick" data-val="4">\u2605</span>' +
+          '<span class="star-pick" data-val="5">\u2605</span>' +
+        '</div>' +
+        '<textarea class="form-textarea" id="reviewText" placeholder="Tu experiencia con este proveedor..." maxlength="500"></textarea>' +
+        '<p class="review-note">La rese\u00f1a ser\u00e1 visible una vez aprobada.</p>' +
+        '<button class="btn-submit-review" id="btnSubmitReview">Enviar rese\u00f1a</button>' +
+      '</div>' +
       '<div class="detail-actions">' +
-        '<a class="btn-call" href="tel:' + p.phone.replace(/\D/g, '') + '" style="flex:1">\uD83D\uDCDE Llamar ahora</a>' +
-        (p.email ? '<a class="btn-email" href="mailto:' + escapeHtml(p.email) + '" style="padding:0.55rem 1rem;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.35rem">\u2709\uFE0F Correo</a>' : '') +
+        '<a class="btn-call-detail" href="tel:' + phone.replace(/\D/g, '') + '">Llamar</a>' +
+        (email ? '<a class="btn-email-detail" href="mailto:' + escapeHtml(email) + '">Correo</a>' : '') +
       '</div>';
 
     document.getElementById('detailModal').classList.add('open');
+
+    // Wire up review form
+    setupReviewForm(pk);
   }
 
   function closeDetail() {
     document.getElementById('detailModal').classList.remove('open');
   }
 
-  // Event delegation for card clicks
+  // ------------------------------------------------------------------
+  // Review form inside detail modal
+  // ------------------------------------------------------------------
+
+  function setupReviewForm(pk) {
+    var selectedStars = 0;
+
+    // Toggle form
+    var btnShow = document.getElementById('btnWriteReview');
+    var form = document.getElementById('reviewForm');
+    if (btnShow) {
+      btnShow.addEventListener('click', function () {
+        window.CostaSurAuth.requireIdentity(function () {
+          form.style.display = '';
+          btnShow.style.display = 'none';
+        });
+      });
+    }
+
+    // Star picker
+    var picker = document.getElementById('starPicker');
+    if (picker) {
+      var stars = picker.querySelectorAll('.star-pick');
+      for (var i = 0; i < stars.length; i++) {
+        stars[i].addEventListener('click', function () {
+          selectedStars = Number(this.getAttribute('data-val'));
+          var all = picker.querySelectorAll('.star-pick');
+          for (var j = 0; j < all.length; j++) {
+            all[j].classList.toggle('star-selected', Number(all[j].getAttribute('data-val')) <= selectedStars);
+          }
+        });
+      }
+    }
+
+    // Submit
+    var btnSubmit = document.getElementById('btnSubmitReview');
+    if (btnSubmit) {
+      btnSubmit.addEventListener('click', function () {
+        var texto = (document.getElementById('reviewText').value || '').trim();
+        if (!selectedStars) { alert('Selecciona las estrellas.'); return; }
+        if (!texto) { alert('Escribe tu rese\u00f1a.'); return; }
+        if (texto.length > 500) { alert('M\u00e1ximo 500 caracteres.'); return; }
+
+        var identity = window.CostaSurAuth.getIdentity();
+        if (!identity) return;
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Enviando...';
+
+        window.CostaSurDB.submitReview({
+          providerKey: pk,
+          comunidad: identity.comunidad,
+          casa: identity.casa,
+          nombre: 'Casa ' + identity.casa,
+          estrellas: selectedStars,
+          texto: texto
+        }).then(function (result) {
+          if (result.ok) {
+            form.innerHTML = '<p class="review-success">Rese\u00f1a enviada. Ser\u00e1 visible una vez aprobada.</p>';
+          } else {
+            alert('Error: ' + (result.error || 'Intenta de nuevo.'));
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Enviar rese\u00f1a';
+          }
+        });
+      });
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Event setup
+  // ------------------------------------------------------------------
+
   function setupCardClicks() {
     var grid = document.getElementById('providerGrid');
     if (!grid) return;
+
     grid.addEventListener('click', function (e) {
+      // Vote buttons handled separately
+      if (e.target.closest('.vote-btn')) return;
+
+      // Detail button
+      var detailBtn = e.target.closest('.btn-detail');
+      if (detailBtn) {
+        e.preventDefault();
+        openDetail(detailBtn.getAttribute('data-pk'));
+        return;
+      }
+
+      // Card click (but not on links)
       var card = e.target.closest('.provider-card');
-      if (!card) return;
-      if (e.target.closest('a')) return;
-      openDetail(card.getAttribute('data-id'));
+      if (card && !e.target.closest('a')) {
+        openDetail(card.getAttribute('data-pk'));
+      }
     });
+
+    // Vote delegation
+    grid.addEventListener('click', handleVoteClick);
   }
 
-  // Close modals on backdrop click
   function setupModalBackdrops() {
     var detail = document.getElementById('detailModal');
     if (detail) {
       detail.addEventListener('click', function (e) {
         if (e.target === detail) closeDetail();
       });
+      // Vote clicks inside modal
+      detail.addEventListener('click', handleVoteClick);
     }
   }
 
-  // Search debounce
   function setupSearch() {
     var input = document.getElementById('searchInput');
     if (!input) return;
@@ -231,7 +473,8 @@
   window._closeDetail = closeDetail;
 
   document.addEventListener('DOMContentLoaded', async function () {
-    providers = await window.CostaSurDB.fetchProviders();
+    var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
+    providers = await window.CostaSurDB.fetchProviders(identity);
     applyFilters();
     setupCardClicks();
     setupModalBackdrops();
