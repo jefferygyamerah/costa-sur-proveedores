@@ -244,6 +244,19 @@
         if (result.ok) {
           if (result.voteScore !== undefined) p.voteScore = result.voteScore;
           if (result.userVote !== undefined) p.userVote = result.userVote;
+          // After upvote, open detail modal with review form visible
+          if (dir === 1) {
+            openDetail(pk);
+            // Auto-show the review form so the user is prompted to leave a review
+            setTimeout(function () {
+              var btnShow = document.getElementById('btnWriteReview');
+              var form = document.getElementById('reviewForm');
+              if (btnShow && form) {
+                form.style.display = '';
+                btnShow.style.display = 'none';
+              }
+            }, 100);
+          }
         } else {
           // Revert
           p.userVote = prevVote;
