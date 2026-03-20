@@ -84,7 +84,7 @@
       return Object.assign({}, p, {
         recCount: 1,
         communityCount: 1,
-        recommendations: [{ community: 'Villa Valencia', house_number: '104' }]
+        recommendations: [{ community: 'Villa Valencia', house_number: p.id === '2' ? '60' : p.id === '11' ? '66' : p.id === '12' ? '89' : p.id === '1' || p.id === '3' || p.id === '4' ? '98' : '104' }]
       });
     });
   }
