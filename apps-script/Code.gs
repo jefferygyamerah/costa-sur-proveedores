@@ -14,6 +14,7 @@
  */
 
 var SHEET_NAME = 'Proveedores';
+var FEEDBACK_SHEET_NAME = 'Feedback';
 
 function getSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -37,6 +38,12 @@ function doGet(e) {
 
   if (action === 'providers') {
     return serveProviders();
+  }
+
+  if (action === 'feedback') {
+    var providerName = (e.parameter && e.parameter.provider) || '';
+    var providerPhone = (e.parameter && e.parameter.phone) || '';
+    return serveFeedback(providerName, providerPhone);
   }
 
   return ContentService.createTextOutput(
@@ -100,10 +107,15 @@ function serveProviders() {
   ).setMimeType(ContentService.MimeType.JSON);
 }
 
-// POST — save a new provider recommendation
+// POST — route by _type field
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
 
+  if (data._type === 'feedback') {
+    return handleFeedbackPost(data);
+  }
+
+  // Default: provider recommendation
   var sheet = getSheet();
   sheet.appendRow([
     new Date(),
@@ -121,5 +133,102 @@ function doPost(e) {
 
   return ContentService.createTextOutput(
     JSON.stringify({ status: 'ok' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+// --- Feedback ---
+
+function getFeedbackSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(FEEDBACK_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(FEEDBACK_SHEET_NAME);
+    sheet.appendRow([
+      'Timestamp', 'ProviderName', 'ProviderPhone', 'Rating',
+      'Comment', 'Community', 'Casa', 'Estado'
+    ]);
+    sheet.getRange(1, 1, 1, 8).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// Verify that the community+casa combo exists as a recommender on an approved row
+function isVerifiedRecommender(comunidad, casa) {
+  var sheet = getSheet();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    var estado = String(data[i][10] || '').trim().toLowerCase();
+    if (estado !== 'aprobado') continue;
+    var rowComunidad = String(data[i][6] || '').trim().toLowerCase();
+    var rowCasa = String(data[i][7] || '').trim().toLowerCase();
+    if (rowComunidad === comunidad.trim().toLowerCase() &&
+        rowCasa === casa.trim().toLowerCase()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function handleFeedbackPost(data) {
+  var comunidad = data.comunidad || '';
+  var casa = data.casa || '';
+
+  if (!isVerifiedRecommender(comunidad, casa)) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: 'error', message: 'No encontramos tu recomendación. Solo residentes que han recomendado un proveedor pueden dejar opiniones.' })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var feedbackSheet = getFeedbackSheet();
+  feedbackSheet.appendRow([
+    new Date(),
+    data.providerName || '',
+    data.providerPhone || '',
+    data.rating || '',
+    data.comment || '',
+    comunidad,
+    casa,
+    'pendiente'
+  ]);
+
+  return ContentService.createTextOutput(
+    JSON.stringify({ status: 'ok' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Serve approved feedback for a specific provider
+function serveFeedback(providerName, providerPhone) {
+  var sheet = getFeedbackSheet();
+  var data = sheet.getDataRange().getValues();
+  var feedback = [];
+  var thumbsUp = 0;
+  var thumbsDown = 0;
+
+  for (var i = 1; i < data.length; i++) {
+    var estado = String(data[i][7] || '').trim().toLowerCase();
+    if (estado !== 'aprobado') continue;
+
+    var name = String(data[i][1] || '').trim().toLowerCase();
+    var phone = String(data[i][2] || '').trim();
+
+    if (name === providerName.trim().toLowerCase() && phone === providerPhone.trim()) {
+      var rating = String(data[i][3] || '').trim();
+      if (rating === 'up') thumbsUp++;
+      if (rating === 'down') thumbsDown++;
+
+      var comment = String(data[i][4] || '').trim();
+      if (comment) {
+        feedback.push({
+          rating: rating,
+          comment: comment,
+          community: String(data[i][5] || '').trim()
+        });
+      }
+    }
+  }
+
+  return ContentService.createTextOutput(
+    JSON.stringify({ thumbsUp: thumbsUp, thumbsDown: thumbsDown, comments: feedback })
   ).setMimeType(ContentService.MimeType.JSON);
 }

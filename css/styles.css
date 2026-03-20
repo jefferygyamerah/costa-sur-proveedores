@@ -612,6 +612,85 @@ header {
   font-size: 0.75rem;
 }
 
+/* -- FEEDBACK SECTION -- */
+.feedback-section {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.feedback-display { margin-bottom: 1rem; }
+.fb-counts {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.fb-count-up, .fb-count-down {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.fb-comment-item {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.fb-comment-item:last-child { border-bottom: none; }
+.fb-comment-rating { font-size: 0.9rem; flex-shrink: 0; }
+.fb-comment-body { flex: 1; }
+.fb-comment-text { display: block; color: var(--text); line-height: 1.4; }
+.fb-comment-source {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-light);
+  margin-top: 0.2rem;
+}
+.fb-empty {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-style: italic;
+}
+.feedback-gate-label {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+.feedback-rate {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.fb-thumb {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--gray);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fb-thumb:hover { border-color: var(--teal); background: var(--teal-pale); }
+.fb-thumb.active.fb-up { border-color: var(--green); background: var(--green-bg); }
+.fb-thumb.active.fb-down { border-color: var(--red); background: var(--red-bg); }
+.fb-msg {
+  display: none;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+.fb-msg-error { background: var(--red-bg); color: var(--red); }
+.fb-msg-success { background: var(--green-bg); color: var(--green); }
+.fb-submit { margin-top: 0.25rem; }
+
 /* -- FOOTER -- */
 footer {
   background: var(--teal-dark);

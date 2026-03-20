@@ -165,6 +165,45 @@
       recsHtml += '</div>';
     }
 
+    var feedbackHtml =
+      '<div class="feedback-section">' +
+        '<div class="detail-recs-title">Opiniones</div>' +
+        '<div id="feedbackDisplay" class="feedback-display"></div>' +
+        '<div class="feedback-gate">' +
+          '<p class="feedback-gate-label">Para opinar, verifica tu identidad como residente:</p>' +
+          '<div class="form-row">' +
+            '<div class="form-group">' +
+              '<label class="form-label">Comunidad <span class="req">*</span></label>' +
+              '<select class="form-select" id="fb-comunidad">' +
+                '<option value="">Seleccionar...</option>' +
+                '<option value="Villa Valencia">Villa Valencia</option>' +
+                '<option value="Costa Esmeralda">Costa Esmeralda</option>' +
+                '<option value="El Doral">El Doral</option>' +
+                '<option value="Costa Mare">Costa Mare</option>' +
+                '<option value="Sunset Coast">Sunset Coast</option>' +
+                '<option value="Villa Sur">Villa Sur</option>' +
+                '<option value="Costa Sur Village">Costa Sur Village</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Casa # <span class="req">*</span></label>' +
+              '<input type="text" class="form-input" id="fb-casa" placeholder="Ej. 104"/>' +
+            '</div>' +
+          '</div>' +
+          '<div class="feedback-rate">' +
+            '<button class="fb-thumb fb-up" data-rating="up" title="Recomendar">&#x1F44D;</button>' +
+            '<button class="fb-thumb fb-down" data-rating="down" title="No recomendar">&#x1F44E;</button>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label">Comentario (opcional)</label>' +
+            '<textarea class="form-textarea" id="fb-comment" placeholder="Tu experiencia con este proveedor..."></textarea>' +
+          '</div>' +
+          '<button class="btn-submit fb-submit" id="fb-submit">Enviar opini\u00f3n</button>' +
+          '<div id="fb-error" class="fb-msg fb-msg-error"></div>' +
+          '<div id="fb-success" class="fb-msg fb-msg-success"></div>' +
+        '</div>' +
+      '</div>';
+
     document.getElementById('detailContent').innerHTML =
       '<div class="detail-header">' +
         '<div style="display:flex;gap:0.75rem;align-items:flex-start;flex:1">' +
@@ -185,7 +224,11 @@
       '<div class="detail-actions">' +
         '<a class="btn-call" href="tel:' + p.phone.replace(/\D/g, '') + '" style="flex:1">\uD83D\uDCDE Llamar ahora</a>' +
         (p.email ? '<a class="btn-email" href="mailto:' + escapeHtml(p.email) + '" style="padding:0.55rem 1rem;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.35rem">\u2709\uFE0F Correo</a>' : '') +
-      '</div>';
+      '</div>' +
+      feedbackHtml;
+
+    // Wire up feedback UI
+    setupFeedbackUI(p);
 
     document.getElementById('detailModal').classList.add('open');
   }
@@ -225,6 +268,102 @@
       clearTimeout(timer);
       timer = setTimeout(applyFilters, 150);
     });
+  }
+
+  function setupFeedbackUI(provider) {
+    var selectedRating = '';
+
+    // Load existing feedback
+    window.CostaSurDB.fetchFeedback(provider.name, provider.phone).then(function (fb) {
+      var display = document.getElementById('feedbackDisplay');
+      if (!display) return;
+      var html = '';
+      if (fb.thumbsUp || fb.thumbsDown) {
+        html += '<div class="fb-counts">' +
+          '<span class="fb-count-up">\uD83D\uDC4D ' + fb.thumbsUp + '</span>' +
+          '<span class="fb-count-down">\uD83D\uDC4E ' + fb.thumbsDown + '</span>' +
+        '</div>';
+      }
+      if (fb.comments && fb.comments.length) {
+        for (var i = 0; i < fb.comments.length; i++) {
+          var cm = fb.comments[i];
+          html += '<div class="fb-comment-item">' +
+            '<span class="fb-comment-rating">' + (cm.rating === 'up' ? '\uD83D\uDC4D' : '\uD83D\uDC4E') + '</span>' +
+            '<div class="fb-comment-body">' +
+              '<span class="fb-comment-text">' + escapeHtml(cm.comment) + '</span>' +
+              '<span class="fb-comment-source">' + escapeHtml(cm.community) + '</span>' +
+            '</div>' +
+          '</div>';
+        }
+      }
+      if (!html) {
+        html = '<p class="fb-empty">A\u00fan no hay opiniones para este proveedor.</p>';
+      }
+      display.innerHTML = html;
+    });
+
+    // Thumb toggle buttons
+    var thumbs = document.querySelectorAll('.fb-thumb');
+    for (var i = 0; i < thumbs.length; i++) {
+      thumbs[i].addEventListener('click', function () {
+        selectedRating = this.getAttribute('data-rating');
+        var all = document.querySelectorAll('.fb-thumb');
+        for (var j = 0; j < all.length; j++) all[j].classList.remove('active');
+        this.classList.add('active');
+      });
+    }
+
+    // Submit
+    var submitBtn = document.getElementById('fb-submit');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function () {
+        var comunidad = document.getElementById('fb-comunidad').value;
+        var casa = document.getElementById('fb-casa').value.trim();
+        var comment = document.getElementById('fb-comment').value.trim();
+        var errEl = document.getElementById('fb-error');
+        var succEl = document.getElementById('fb-success');
+
+        errEl.style.display = 'none';
+        succEl.style.display = 'none';
+
+        if (!comunidad || !casa) {
+          errEl.textContent = 'Selecciona tu comunidad e ingresa tu n\u00famero de casa.';
+          errEl.style.display = 'block';
+          return;
+        }
+        if (!selectedRating) {
+          errEl.textContent = 'Selecciona \uD83D\uDC4D o \uD83D\uDC4E antes de enviar.';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+
+        window.CostaSurDB.submitFeedback({
+          providerName: provider.name,
+          providerPhone: provider.phone,
+          rating: selectedRating,
+          comment: comment,
+          community: comunidad,
+          house_number: casa
+        }).then(function (res) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enviar opini\u00f3n';
+          if (res.ok) {
+            succEl.textContent = '\u00a1Gracias! Tu opini\u00f3n ser\u00e1 revisada antes de publicarse.';
+            succEl.style.display = 'block';
+            document.getElementById('fb-comment').value = '';
+            selectedRating = '';
+            var all = document.querySelectorAll('.fb-thumb');
+            for (var j = 0; j < all.length; j++) all[j].classList.remove('active');
+          } else {
+            errEl.textContent = res.error || 'Error al enviar. Intenta de nuevo.';
+            errEl.style.display = 'block';
+          }
+        });
+      });
+    }
   }
 
   window._filterCat = filterCat;

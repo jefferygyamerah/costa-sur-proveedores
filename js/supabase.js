@@ -89,8 +89,51 @@
     });
   }
 
+  // Fetch approved feedback for a provider
+  async function fetchFeedback(providerName, providerPhone) {
+    if (!isConfigured()) return { thumbsUp: 0, thumbsDown: 0, comments: [] };
+
+    try {
+      var url = cfg.APPS_SCRIPT_URL + '?action=feedback' +
+        '&provider=' + encodeURIComponent(providerName) +
+        '&phone=' + encodeURIComponent(providerPhone);
+      var resp = await fetch(url);
+      return await resp.json();
+    } catch (err) {
+      console.error('Fetch feedback failed:', err);
+      return { thumbsUp: 0, thumbsDown: 0, comments: [] };
+    }
+  }
+
+  // Submit feedback (thumbs up/down + optional comment)
+  async function submitFeedback(data) {
+    if (!isConfigured()) return { ok: true, demo: true };
+
+    try {
+      await fetch(cfg.APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          _type: 'feedback',
+          providerName: data.providerName,
+          providerPhone: data.providerPhone,
+          rating: data.rating,
+          comment: data.comment || '',
+          comunidad: data.community,
+          casa: data.house_number
+        })
+      });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
   window.CostaSurDB = {
     fetchProviders: fetchProviders,
-    submitProvider: submitProvider
+    submitProvider: submitProvider,
+    fetchFeedback: fetchFeedback,
+    submitFeedback: submitFeedback
   };
 })();
