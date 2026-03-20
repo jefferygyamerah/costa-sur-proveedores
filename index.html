@@ -22,16 +22,46 @@
   <a class="btn-suggest" href="submit.html">+ Recomendar</a>
 </header>
 
-<!-- HERO -->
+<!-- HERO — full image with search overlay -->
 <div class="hero">
-  <div class="hero-bg"><img src="logo/logo.JPG" alt=""/></div>
-  <div class="hero-inner">
+  <img class="hero-img" src="logo/logo.JPG" alt="Costa Sur"/>
+  <div class="hero-overlay">
     <h1>Proveedores recomendados en Costa Sur</h1>
     <p>Directorio comunitario con referencias de vecinos.</p>
+    <div class="hero-search">
+      <span class="hero-search-icon">&#x1F50D;</span>
+      <input type="text" placeholder="Buscar por nombre o servicio..." id="searchInput"/>
+    </div>
     <div class="hero-stats">
       <div class="stat"><strong id="statTotal">0</strong><span>Proveedores</span></div>
       <div class="stat"><strong>10</strong><span>Categorias</span></div>
       <div class="stat"><strong id="statCommunities">0</strong><span>Comunidades</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-it-works">
+  <div class="how-inner">
+    <div class="how-step">
+      <div class="how-icon">&#x1F50D;</div>
+      <div class="how-label">Busca</div>
+      <div class="how-desc">Encuentra proveedores por categoria o nombre</div>
+    </div>
+    <div class="how-step">
+      <div class="how-icon">&#x2B06;</div>
+      <div class="how-label">Vota</div>
+      <div class="how-desc">Flecha verde = buena experiencia, roja = mala</div>
+    </div>
+    <div class="how-step">
+      <div class="how-icon">&#x2B50;</div>
+      <div class="how-label">Resena</div>
+      <div class="how-desc">Comparte tu experiencia con una resena detallada</div>
+    </div>
+    <div class="how-step">
+      <div class="how-icon">&#x2795;</div>
+      <div class="how-label">Recomienda</div>
+      <div class="how-desc">Agrega proveedores que conozcas y recomiendas</div>
     </div>
   </div>
 </div>
@@ -58,10 +88,6 @@
 
   <!-- GRID -->
   <div>
-    <div class="search-wrap">
-      <span class="search-icon">&#x1F50D;</span>
-      <input type="text" placeholder="Buscar por nombre o servicio..." id="searchInput"/>
-    </div>
     <div class="grid-header">
       <div class="grid-title" id="gridTitle">Todos los Proveedores</div>
       <div class="grid-count" id="gridCount">0 proveedores</div>
@@ -72,6 +98,48 @@
         <h3>Cargando...</h3>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="faq-inner">
+    <h2 class="faq-title">Preguntas Frecuentes</h2>
+
+    <details class="faq-item">
+      <summary>Como funciona este directorio?</summary>
+      <p>Residentes de Costa Sur recomiendan proveedores de servicios que han usado personalmente. Cada recomendacion incluye la comunidad y numero de casa del residente, para que sepas que es una referencia real de un vecino.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Que significan las flechas de voto?</summary>
+      <p>La <strong>flecha verde hacia arriba</strong> significa que tuviste buena experiencia con el proveedor. La <strong>flecha roja hacia abajo</strong> significa que no fue buena. Cada hogar puede votar una vez por proveedor. El numero entre las flechas es la puntuacion neta de la comunidad.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Como dejo una resena?</summary>
+      <p>Haz clic en "Ver detalles" en la tarjeta del proveedor, luego en "Escribir resena". Se te pedira tu comunidad y numero de casa. Tu resena sera revisada antes de publicarse.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Como agrego un proveedor nuevo?</summary>
+      <p>Haz clic en el boton "+ Recomendar" en la parte superior. Completa los datos del proveedor y tu informacion como residente. La recomendacion sera revisada y publicada por el equipo.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Quien puede usar este directorio?</summary>
+      <p>Cualquier residente de las comunidades de Costa Sur: Villa Valencia, Costa Esmeralda, El Doral, Costa Mare, Sunset Coast, Villa Sur, Costa Sur Village y alrededores.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Las resenas son moderadas?</summary>
+      <p>Si. Todas las resenas y recomendaciones nuevas pasan por revision antes de publicarse. Esto asegura que el contenido sea real y respetuoso.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Por que me piden mi comunidad y numero de casa?</summary>
+      <p>Para verificar que las recomendaciones y votos vienen de residentes reales de Costa Sur. No compartimos tu informacion publicamente — solo aparece como "Casa X" en las resenas.</p>
+    </details>
   </div>
 </div>
 

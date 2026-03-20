@@ -58,9 +58,9 @@
     var upClass = p.userVote === 1 ? ' vote-active' : '';
     var downClass = p.userVote === -1 ? ' vote-active' : '';
     return '<div class="vote-widget" data-pk="' + escapeHtml(p.providerKey) + '">' +
-      '<button class="vote-btn vote-up' + upClass + '" data-dir="1" aria-label="Votar a favor">\u25B2</button>' +
+      '<button class="vote-btn vote-up' + upClass + '" data-dir="1" aria-label="Buena experiencia" title="Buena experiencia">\u25B2</button>' +
       '<span class="vote-score">' + (p.voteScore || 0) + '</span>' +
-      '<button class="vote-btn vote-down' + downClass + '" data-dir="-1" aria-label="Votar en contra">\u25BC</button>' +
+      '<button class="vote-btn vote-down' + downClass + '" data-dir="-1" aria-label="Mala experiencia" title="Mala experiencia">\u25BC</button>' +
     '</div>';
   }
 
