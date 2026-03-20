@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proveedores Costa Sur — Directorio de confianza</title>
+  <meta name="description" content="Directorio de proveedores de servicios recomendados por residentes de Costa Sur, Panama. Plomeros, electricistas, jardineros y mas."/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">&#x1F3E0;</div>
+    <div class="brand-text">
+      <strong>Proveedores Costa Sur</strong>
+      <span>Directorio comunitario de confianza</span>
+    </div>
+  </div>
+  <a class="btn-suggest" href="submit.html">&#x2795; Recomendar Proveedor</a>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Directorio Comunitario 2026</div>
+    <h1>Proveedores de Confianza</h1>
+    <p>Profesionales y empresas recomendados directamente por residentes de Costa Sur. Verificados por comunidad y numero de casa.</p>
+    <div class="hero-stats">
+      <div class="stat"><strong id="statTotal">0</strong><span>Proveedores</span></div>
+      <div class="stat"><strong>10</strong><span>Categorias</span></div>
+      <div class="stat"><strong id="statCommunities">0</strong><span>Comunidades</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-sidebar">
+  <!-- SIDEBAR -->
+  <div>
+    <div class="sidebar-panel">
+      <div class="sidebar-title">Filtrar por categoria</div>
+      <button class="cat-btn active" onclick="window._filterCat('all',this)"><span class="cat-icon">&#x1F50D;</span>Todos<span class="cat-count" id="cnt-all">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('aires',this)"><span class="cat-icon">&#x2744;&#xFE0F;</span>Aires Acondicionados<span class="cat-count" id="cnt-aires">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('catering',this)"><span class="cat-icon">&#x1F37D;&#xFE0F;</span>Catering / Eventos<span class="cat-count" id="cnt-catering">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('jardineria',this)"><span class="cat-icon">&#x1F33F;</span>Jardineria<span class="cat-count" id="cnt-jardineria">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('linea-blanca',this)"><span class="cat-icon">&#x1FAE7;</span>Linea Blanca<span class="cat-count" id="cnt-linea-blanca">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('plomeria',this)"><span class="cat-icon">&#x1F6B0;</span>Plomeria<span class="cat-count" id="cnt-plomeria">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('general',this)"><span class="cat-icon">&#x1F528;</span>Trabajos Generales<span class="cat-count" id="cnt-general">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('fumigacion',this)"><span class="cat-icon">&#x1FAB2;</span>Fumigacion<span class="cat-count" id="cnt-fumigacion">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('techo',this)"><span class="cat-icon">&#x1F3E0;</span>Techo y Canales<span class="cat-count" id="cnt-techo">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('solar',this)"><span class="cat-icon">&#x2600;&#xFE0F;</span>Paneles Solares<span class="cat-count" id="cnt-solar">0</span></button>
+      <button class="cat-btn" onclick="window._filterCat('vidrios',this)"><span class="cat-icon">&#x1FA9F;</span>Vidrios y Aluminio<span class="cat-count" id="cnt-vidrios">0</span></button>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div>
+    <div class="search-wrap">
+      <span class="search-icon">&#x1F50D;</span>
+      <input type="text" placeholder="Buscar por nombre o servicio..." id="searchInput"/>
+    </div>
+    <div class="grid-header">
+      <div class="grid-title" id="gridTitle">Todos los Proveedores</div>
+      <div class="grid-count" id="gridCount">0 proveedores</div>
+    </div>
+    <div class="providers-grid" id="providerGrid">
+      <div class="empty-state">
+        <div class="empty-icon">&#x23F3;</div>
+        <h3>Cargando...</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>Proveedores Costa Sur</strong> &middot; Directorio comunitario de confianza<br>
+  <a href="submit.html">Recomendar un proveedor</a> &middot; Costa Sur, Panama &copy; 2026
+</footer>
+
+<!-- DETAIL MODAL -->
+<div class="detail-overlay" id="detailModal">
+  <div class="detail-modal" id="detailContent"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/providers.js"></script>
+</body>
+</html>

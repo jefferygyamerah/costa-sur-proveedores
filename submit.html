@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recomendar Proveedor — Proveedores Costa Sur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:0.75rem">
+      <div class="brand-icon">&#x1F3E0;</div>
+      <div class="brand-text">
+        <strong>Proveedores Costa Sur</strong>
+        <span>Directorio comunitario de confianza</span>
+      </div>
+    </a>
+  </div>
+  <a class="btn-suggest" href="index.html" style="background:var(--teal-light);color:var(--teal)">&#x2190; Ver directorio</a>
+</header>
+
+<!-- FORM -->
+<div style="max-width:520px;margin:2.5rem auto;padding:0 1.5rem;">
+  <div class="modal" style="box-shadow:0 4px 24px rgba(13,148,136,0.1);max-width:100%;">
+    <div class="modal-header">
+      <div class="modal-title">&#x2795; Recomendar un Proveedor</div>
+    </div>
+
+    <div id="suggestForm">
+      <div class="modal-desc">Tu recomendacion ayuda a otros residentes de Costa Sur a encontrar proveedores de confianza. Sera revisada antes de publicarse.</div>
+
+      <div style="font-size:0.76rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-light);margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">Datos del proveedor</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre / Empresa <span class="req">*</span></label>
+          <input type="text" class="form-input" id="sug-nombre" placeholder="Ej. Juan Perez"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria <span class="req">*</span></label>
+          <select class="form-select" id="sug-categoria">
+            <option value="">Seleccionar...</option>
+            <option value="aires">Aires Acondicionados</option>
+            <option value="catering">Catering / Eventos</option>
+            <option value="jardineria">Jardineria</option>
+            <option value="linea-blanca">Linea Blanca</option>
+            <option value="plomeria">Plomeria</option>
+            <option value="general">Trabajos Generales</option>
+            <option value="fumigacion">Fumigacion</option>
+            <option value="techo">Techo y Canales</option>
+            <option value="solar">Paneles Solares</option>
+            <option value="vidrios">Vidrios y Aluminio</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de servicio que ofrece <span class="req">*</span></label>
+        <input type="text" class="form-input" id="sug-servicio" placeholder="Ej. Instalacion y mantenimiento de A/C"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefono <span class="req">*</span></label>
+          <input type="tel" class="form-input" id="sug-telefono" placeholder="6000-0000"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo electronico</label>
+          <input type="email" class="form-input" id="sug-correo" placeholder="opcional"/>
+        </div>
+      </div>
+
+      <div style="font-size:0.76rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-light);margin-bottom:0.75rem;margin-top:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">Tu informacion (quien recomienda)</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Residencial <span class="req">*</span></label>
+          <select class="form-select" id="sug-comunidad">
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Numero de casa <span class="req">*</span></label>
+          <input type="text" class="form-input" id="sug-casa" placeholder="Ej. 104"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tu nombre</label>
+        <input type="text" class="form-input" id="sug-recomendador" placeholder="Opcional"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Por que lo recomiendas?</label>
+        <textarea class="form-textarea" id="sug-comentario" placeholder="Cuentanos tu experiencia (opcional)..."></textarea>
+      </div>
+
+      <button class="btn-submit" onclick="window._submitSuggest()">Enviar recomendacion &#x2192;</button>
+      <p class="approval-note">&#x1F512; Revisado por el equipo antes de publicarse.</p>
+    </div>
+
+    <div class="success-msg" id="suggestSuccess">
+      <div class="success-icon-wrap">&#x2705;</div>
+      <h3>Recomendacion enviada!</h3>
+      <p>Gracias por contribuir al directorio. Tu recomendacion sera revisada y publicada en los proximos dias.</p>
+      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center">
+        <a class="btn-suggest" href="index.html">Ver directorio</a>
+        <button class="btn-suggest" onclick="window._resetForm()" style="background:var(--teal-light);color:var(--teal)">Recomendar otro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>Proveedores Costa Sur</strong> &middot; Directorio comunitario de confianza<br>
+  <a href="index.html">Ver directorio</a> &middot; Costa Sur, Panama &copy; 2026
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/submit.js"></script>
+</body>
+</html>
