@@ -43,17 +43,7 @@
         <div class="form-group">
           <label class="form-label">Categoria <span class="req">*</span></label>
           <select class="form-select" id="sug-categoria">
-            <option value="">Seleccionar...</option>
-            <option value="aires">Aires Acondicionados</option>
-            <option value="catering">Catering / Eventos</option>
-            <option value="jardineria">Jardineria</option>
-            <option value="linea-blanca">Linea Blanca</option>
-            <option value="plomeria">Plomeria</option>
-            <option value="general">Trabajos Generales</option>
-            <option value="fumigacion">Fumigacion</option>
-            <option value="techo">Techo y Canales</option>
-            <option value="solar">Paneles Solares</option>
-            <option value="vidrios">Vidrios y Aluminio</option>
+            <option value="">Cargando categorias...</option>
           </select>
         </div>
       </div>
@@ -131,5 +121,21 @@
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/submit.js"></script>
+<script>
+(function () {
+  document.addEventListener('DOMContentLoaded', async function () {
+    var cats = await window.CostaSurDB.fetchCategories();
+    var sel = document.getElementById('sug-categoria');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Seleccionar...</option>';
+    for (var i = 0; i < cats.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = cats[i].slug;
+      opt.textContent = cats[i].label;
+      sel.appendChild(opt);
+    }
+  });
+})();
+</script>
 </body>
 </html>

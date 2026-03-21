@@ -6,35 +6,12 @@
 (function () {
   'use strict';
 
-  var CATEGORIES = {
-    'aires':       { icon: '\u2744\uFE0F', label: 'Aires Acondicionados' },
-    'catering':    { icon: '\uD83C\uDF7D\uFE0F', label: 'Catering / Eventos' },
-    'jardineria':  { icon: '\uD83C\uDF3F', label: 'Jardiner\u00eda' },
-    'linea-blanca':{ icon: '\uD83E\uDEE7', label: 'L\u00ednea Blanca' },
-    'plomeria':    { icon: '\uD83D\uDEB0', label: 'Plomer\u00eda' },
-    'general':     { icon: '\uD83D\uDD28', label: 'Trabajos Generales' },
-    'fumigacion':  { icon: '\uD83E\uDEB2', label: 'Fumigaci\u00f3n' },
-    'techo':       { icon: '\uD83C\uDFE0', label: 'Techo y Canales' },
-    'solar':       { icon: '\u2600\uFE0F', label: 'Paneles Solares' },
-    'vidrios':     { icon: '\uD83E\uDE9F', label: 'Vidrios y Aluminio' }
-  };
+  // Categories loaded dynamically from the Categorias sheet
+  var CATEGORIES = {};
+  var CAT_KEYWORDS = [];
 
   var providers = [];
   var currentCat = 'all';
-
-  // Infer category from servicio text when categoria is missing
-  var CAT_KEYWORDS = [
-    { cat: 'aires', words: ['aire', 'a/c', 'acondicionado', 'clima'] },
-    { cat: 'catering', words: ['catering', 'comida', 'fiesta', 'evento'] },
-    { cat: 'jardineria', words: ['jardin', 'jardiner'] },
-    { cat: 'linea-blanca', words: ['lavadora', 'secadora', 'linea blanca', 'línea blanca', 'electrodom'] },
-    { cat: 'plomeria', words: ['plomer', 'plomero'] },
-    { cat: 'fumigacion', words: ['fumiga'] },
-    { cat: 'techo', words: ['techo', 'canal', 'gotera'] },
-    { cat: 'solar', words: ['solar', 'panel'] },
-    { cat: 'vidrios', words: ['vidrio', 'aluminio', 'ventana'] },
-    { cat: 'general', words: ['pintura', 'alba', 'constructor', 'general', 'acarreo', 'reparaci'] }
-  ];
 
   function guessCategory(servicio) {
     var s = (servicio || '').toLowerCase();
@@ -508,7 +485,48 @@
   window._filterCat = filterCat;
   window._closeDetail = closeDetail;
 
+  function buildCategoriesFromData(catList) {
+    CATEGORIES = {};
+    CAT_KEYWORDS = [];
+    for (var i = 0; i < catList.length; i++) {
+      var c = catList[i];
+      CATEGORIES[c.slug] = { icon: c.icon, label: c.label };
+      if (c.keywords && c.keywords.length) {
+        CAT_KEYWORDS.push({ cat: c.slug, words: c.keywords });
+      }
+    }
+  }
+
+  function renderSidebar(catList) {
+    var panel = document.getElementById('sidebarPanel');
+    if (!panel) return;
+
+    var html = '<div class="sidebar-title">Filtrar por categoria</div>' +
+      '<button class="cat-btn active" onclick="window._filterCat(\'all\',this)">' +
+        '<span class="cat-icon">&#x1F50D;</span>Todos<span class="cat-count" id="cnt-all">0</span>' +
+      '</button>';
+
+    for (var i = 0; i < catList.length; i++) {
+      var c = catList[i];
+      html += '<button class="cat-btn" onclick="window._filterCat(\'' + escapeHtml(c.slug) + '\',this)">' +
+        '<span class="cat-icon">' + c.icon + '</span>' + escapeHtml(c.label) +
+        '<span class="cat-count" id="cnt-' + escapeHtml(c.slug) + '">0</span>' +
+      '</button>';
+    }
+
+    panel.innerHTML = html;
+  }
+
   document.addEventListener('DOMContentLoaded', async function () {
+    // Load categories first
+    var catList = await window.CostaSurDB.fetchCategories();
+    buildCategoriesFromData(catList);
+    renderSidebar(catList);
+
+    // Update stat count
+    var statCats = document.getElementById('statCategories');
+    if (statCats) statCats.textContent = catList.length;
+
     var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
     providers = await window.CostaSurDB.fetchProviders(identity);
     // Fill missing categories

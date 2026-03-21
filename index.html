@@ -34,7 +34,7 @@
     </div>
     <div class="hero-stats">
       <div class="stat"><strong id="statTotal">0</strong><span>Proveedores</span></div>
-      <div class="stat"><strong>10</strong><span>Categorias</span></div>
+      <div class="stat"><strong id="statCategories">0</strong><span>Categorias</span></div>
       <div class="stat"><strong id="statCommunities">0</strong><span>Comunidades</span></div>
     </div>
   </div>
@@ -72,18 +72,7 @@
   <div>
     <button class="sidebar-toggle" id="sidebarToggle">Filtrar por categoria</button>
     <div class="sidebar-panel collapsed" id="sidebarPanel">
-      <div class="sidebar-title">Filtrar por categoria</div>
-      <button class="cat-btn active" onclick="window._filterCat('all',this)"><span class="cat-icon">&#x1F50D;</span>Todos<span class="cat-count" id="cnt-all">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('aires',this)"><span class="cat-icon">&#x2744;&#xFE0F;</span>Aires Acondicionados<span class="cat-count" id="cnt-aires">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('catering',this)"><span class="cat-icon">&#x1F37D;&#xFE0F;</span>Catering / Eventos<span class="cat-count" id="cnt-catering">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('jardineria',this)"><span class="cat-icon">&#x1F33F;</span>Jardineria<span class="cat-count" id="cnt-jardineria">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('linea-blanca',this)"><span class="cat-icon">&#x1FAE7;</span>Linea Blanca<span class="cat-count" id="cnt-linea-blanca">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('plomeria',this)"><span class="cat-icon">&#x1F6B0;</span>Plomeria<span class="cat-count" id="cnt-plomeria">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('general',this)"><span class="cat-icon">&#x1F528;</span>Trabajos Generales<span class="cat-count" id="cnt-general">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('fumigacion',this)"><span class="cat-icon">&#x1FAB2;</span>Fumigacion<span class="cat-count" id="cnt-fumigacion">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('techo',this)"><span class="cat-icon">&#x1F3E0;</span>Techo y Canales<span class="cat-count" id="cnt-techo">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('solar',this)"><span class="cat-icon">&#x2600;&#xFE0F;</span>Paneles Solares<span class="cat-count" id="cnt-solar">0</span></button>
-      <button class="cat-btn" onclick="window._filterCat('vidrios',this)"><span class="cat-icon">&#x1FA9F;</span>Vidrios y Aluminio<span class="cat-count" id="cnt-vidrios">0</span></button>
+      <!-- Categories loaded dynamically from Categorias sheet -->
     </div>
   </div>
 

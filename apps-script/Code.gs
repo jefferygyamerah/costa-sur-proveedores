@@ -13,6 +13,7 @@
  *   Votos:       Timestamp | ProviderKey | Comunidad | Casa | HouseholdKey | Voto
  *   Resenas:     Timestamp | ProviderKey | Comunidad | Casa | HouseholdKey |
  *                NombreReviewer | Estrellas | Texto | Estado | ModeradoPor | ModeradoEn
+ *   Categorias:  Slug | Icono | Etiqueta | PalabrasClave | Activa
  */
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,44 @@ function getResenasSheet() {
     'Timestamp', 'ProviderKey', 'Comunidad', 'Casa', 'HouseholdKey',
     'NombreReviewer', 'Estrellas', 'Texto', 'Estado', 'ModeradoPor', 'ModeradoEn'
   ]);
+}
+
+function getCategoriasSheet() {
+  return getOrCreateSheet('Categorias', [
+    'Slug', 'Icono', 'Etiqueta', 'PalabrasClave', 'Activa'
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// ONE-TIME SEED: Populate Categorias sheet with default categories.
+// Run manually from Apps Script editor: Run > seedCategorias
+// ---------------------------------------------------------------------------
+
+function seedCategorias() {
+  var sheet = getCategoriasSheet();
+  var existing = sheet.getLastRow();
+  if (existing > 1) {
+    Logger.log('Categorias sheet already has data (' + (existing - 1) + ' rows). Skipping seed.');
+    return;
+  }
+
+  var defaults = [
+    ['aires',       '❄️', 'Aires Acondicionados',  'aire,a/c,acondicionado,clima',                        'si'],
+    ['catering',    '🍽️', 'Catering / Eventos',    'catering,comida,fiesta,evento',                       'si'],
+    ['jardineria',  '🌿', 'Jardinería',            'jardin,jardiner',                                     'si'],
+    ['linea-blanca','🪧', 'Línea Blanca',          'lavadora,secadora,linea blanca,línea blanca,electrodom','si'],
+    ['plomeria',    '🚰', 'Plomería',              'plomer,plomero',                                      'si'],
+    ['general',     '🔨', 'Trabajos Generales',    'pintura,alba,constructor,general,acarreo,reparaci',    'si'],
+    ['fumigacion',  '🪲', 'Fumigación',            'fumiga',                                              'si'],
+    ['techo',       '🏠', 'Techo y Canales',       'techo,canal,gotera',                                  'si'],
+    ['solar',       '☀️', 'Paneles Solares',       'solar,panel',                                         'si'],
+    ['vidrios',     '🪟', 'Vidrios y Aluminio',    'vidrio,aluminio,ventana',                              'si']
+  ];
+
+  for (var i = 0; i < defaults.length; i++) {
+    sheet.appendRow(defaults[i]);
+  }
+  Logger.log('Seeded ' + defaults.length + ' default categories.');
 }
 
 // ---------------------------------------------------------------------------
@@ -134,12 +173,40 @@ function doGet(e) {
     return serveProviders(comunidad, casa);
   }
 
+  if (action === 'categories') {
+    return serveCategories();
+  }
+
   // Legacy: GET submit support
   if (action === 'submit') {
     return handleSubmitGet(e.parameter.data || '{}');
   }
 
   return jsonError('Accion desconocida');
+}
+
+// ---------------------------------------------------------------------------
+// GET — active categories from Categorias sheet
+// ---------------------------------------------------------------------------
+
+function serveCategories() {
+  var sheet = getCategoriasSheet();
+  var data = sheet.getDataRange().getValues();
+  var categories = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var activa = String(data[i][4] || '').trim().toLowerCase();
+    if (activa !== 'si') continue;
+
+    categories.push({
+      slug: String(data[i][0] || '').trim(),
+      icon: String(data[i][1] || '').trim(),
+      label: String(data[i][2] || '').trim(),
+      keywords: String(data[i][3] || '').trim().split(',').map(function (k) { return k.trim(); }).filter(Boolean)
+    });
+  }
+
+  return jsonOk({ categories: categories });
 }
 
 // ---------------------------------------------------------------------------

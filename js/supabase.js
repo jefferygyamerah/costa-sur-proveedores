@@ -14,6 +14,44 @@
   }
 
   // ---------------------------------------------------------------
+  // Fetch categories from Categorias sheet
+  // ---------------------------------------------------------------
+
+  async function fetchCategories() {
+    if (!isConfigured()) return getDefaultCategories();
+
+    try {
+      var url = cfg.APPS_SCRIPT_URL + '?action=categories';
+      var resp = await fetch(url);
+      var json = await resp.json();
+
+      if (json.success && json.data && json.data.categories && json.data.categories.length) {
+        return json.data.categories;
+      }
+      console.warn('No categories returned, using defaults');
+      return getDefaultCategories();
+    } catch (err) {
+      console.error('Fetch categories failed:', err);
+      return getDefaultCategories();
+    }
+  }
+
+  function getDefaultCategories() {
+    return [
+      { slug: 'aires',        icon: '❄️',  label: 'Aires Acondicionados',  keywords: ['aire','a/c','acondicionado','clima'] },
+      { slug: 'catering',     icon: '🍽️', label: 'Catering / Eventos',    keywords: ['catering','comida','fiesta','evento'] },
+      { slug: 'jardineria',   icon: '🌿',  label: 'Jardinería',            keywords: ['jardin','jardiner'] },
+      { slug: 'linea-blanca', icon: '🪧',  label: 'Línea Blanca',          keywords: ['lavadora','secadora','linea blanca','línea blanca','electrodom'] },
+      { slug: 'plomeria',     icon: '🚰',  label: 'Plomería',              keywords: ['plomer','plomero'] },
+      { slug: 'general',      icon: '🔨',  label: 'Trabajos Generales',    keywords: ['pintura','alba','constructor','general','acarreo','reparaci'] },
+      { slug: 'fumigacion',   icon: '🪲',  label: 'Fumigación',            keywords: ['fumiga'] },
+      { slug: 'techo',        icon: '🏠',  label: 'Techo y Canales',       keywords: ['techo','canal','gotera'] },
+      { slug: 'solar',        icon: '☀️',  label: 'Paneles Solares',       keywords: ['solar','panel'] },
+      { slug: 'vidrios',      icon: '🪟',  label: 'Vidrios y Aluminio',    keywords: ['vidrio','aluminio','ventana'] }
+    ];
+  }
+
+  // ---------------------------------------------------------------
   // Fetch providers (enriched with votes + reviews)
   // ---------------------------------------------------------------
 
@@ -187,6 +225,7 @@
   }
 
   window.CostaSurDB = {
+    fetchCategories: fetchCategories,
     fetchProviders: fetchProviders,
     submitProvider: submitProvider,
     submitVote: submitVote,
