@@ -152,6 +152,11 @@
       return matchCat && matchSearch;
     });
 
+    // Sort by vote score descending
+    filtered.sort(function (a, b) {
+      return (b.voteScore || 0) - (a.voteScore || 0);
+    });
+
     var grid = document.getElementById('providerGrid');
     if (filtered.length) {
       grid.innerHTML = filtered.map(renderCard).join('');
@@ -460,7 +465,10 @@
                   if (voteResult.voteScore !== undefined) p.voteScore = voteResult.voteScore;
                   if (voteResult.userVote !== undefined) p.userVote = voteResult.userVote;
                 }
-                if (p) updateVoteWidgets(pk, p);
+                if (p) {
+                  updateVoteWidgets(pk, p);
+                  applyFilters();
+                }
               });
             }
           } else {
