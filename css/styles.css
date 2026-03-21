@@ -614,6 +614,24 @@ header {
   font-style: italic;
 }
 
+/* Vote pending indicator */
+.vote-indicator {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+.vote-indicator-up {
+  background: var(--vote-green-bg);
+  color: var(--vote-green);
+}
+.vote-indicator-down {
+  background: var(--vote-red-bg);
+  color: var(--vote-red);
+}
+
 /* Review form */
 .btn-write-review {
   width: 100%;

@@ -20,6 +20,7 @@
   };
 
   var providers = [];
+  var providerMap = {}; // pk → provider for O(1) lookups
   var currentCat = 'all';
 
   // Infer category from servicio text when categoria is missing
@@ -50,10 +51,10 @@
     return CATEGORIES[cat] || { icon: '\uD83D\uDD27', label: cat };
   }
 
+  var _escDiv = document.createElement('div');
   function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.appendChild(document.createTextNode(str || ''));
-    return div.innerHTML;
+    _escDiv.textContent = str || '';
+    return _escDiv.innerHTML;
   }
 
   // ------------------------------------------------------------------
@@ -206,26 +207,32 @@
   // ------------------------------------------------------------------
 
   function findProvider(pk) {
-    for (var i = 0; i < providers.length; i++) {
-      var k = providers[i].providerKey || providers[i].id;
-      if (k === pk) return providers[i];
-    }
-    return null;
+    return providerMap[pk] || null;
   }
 
   // Pending vote awaiting review submission
   var pendingVote = null;
+  var voteInProgress = false;
 
   function handleVoteClick(e) {
     var btn = e.target.closest('.vote-btn');
     if (!btn) return;
     e.stopPropagation();
 
+    // Prevent double-clicks and re-entry while modal is open
+    if (voteInProgress) return;
+
+    // If vote is clicked inside the detail modal, ignore — the user
+    // is already in the review flow and the modal vote widget is read-only
+    if (btn.closest('.detail-overlay')) return;
+
     var widget = btn.closest('.vote-widget');
     var pk = widget.getAttribute('data-pk');
     var dir = Number(btn.getAttribute('data-dir'));
     var p = findProvider(pk);
     if (!p) return;
+
+    voteInProgress = true;
 
     window.CostaSurAuth.requireIdentity(function (identity) {
       // Store pending vote — it will be submitted after the review
@@ -240,8 +247,22 @@
           form.style.display = '';
           btnShow.style.display = 'none';
         }
+        // Show indicator of which vote direction is pending
+        var indicator = document.getElementById('voteIndicator');
+        if (indicator) {
+          var isUp = dir === 1;
+          indicator.textContent = isUp
+            ? 'Tu voto: Buena experiencia \u25B2'
+            : 'Tu voto: Mala experiencia \u25BC';
+          indicator.className = 'vote-indicator ' + (isUp ? 'vote-indicator-up' : 'vote-indicator-down');
+          indicator.style.display = '';
+        }
+        voteInProgress = false;
       }, 100);
     });
+
+    // If identity modal was dismissed (no callback), unlock
+    setTimeout(function () { voteInProgress = false; }, 500);
   }
 
   function updateVoteWidgets(pk, p) {
@@ -333,6 +354,7 @@
       '<div class="detail-vote">' + voteHtml(p) + '</div>' +
       recsHtml +
       reviewsHtml +
+      '<div class="vote-indicator" id="voteIndicator" style="display:none"></div>' +
       '<button class="btn-write-review" id="btnWriteReview">Escribir rese\u00f1a</button>' +
       '<div class="review-form" id="reviewForm" style="display:none">' +
         '<div class="detail-section-title">Tu rese\u00f1a</div>' +
@@ -488,8 +510,6 @@
       detail.addEventListener('click', function (e) {
         if (e.target === detail) closeDetail();
       });
-      // Vote clicks inside modal
-      detail.addEventListener('click', handleVoteClick);
     }
   }
 
@@ -521,12 +541,14 @@
   document.addEventListener('DOMContentLoaded', async function () {
     var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
     providers = await window.CostaSurDB.fetchProviders(identity);
-    // Fill missing categories
+    // Fill missing categories and build lookup map
     for (var n = 0; n < providers.length; n++) {
       var cat = providers[n].categoria || providers[n].category || '';
       if (!cat) {
         providers[n].categoria = guessCategory(providers[n].servicio || providers[n].service);
       }
+      var pk = providers[n].providerKey || providers[n].id;
+      if (pk) providerMap[pk] = providers[n];
     }
     applyFilters();
     setupCardClicks();
