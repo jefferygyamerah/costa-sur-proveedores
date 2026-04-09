@@ -4,3 +4,4 @@
 *.pem
 *.secret
 .DS_Store
+.vercel

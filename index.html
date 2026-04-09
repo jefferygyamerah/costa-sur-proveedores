@@ -5,15 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Proveedores Costa Sur — Directorio de confianza</title>
   <meta name="description" content="Directorio de proveedores de servicios recomendados por residentes de Costa Sur, Panama. Plomeros, electricistas, jardineros y mas."/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Speed up third-party connections -->
+  <link rel="preconnect" href="https://script.google.com"/>
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
+  <!-- Preload hero image so it starts downloading immediately -->
+  <link rel="preload" as="image" href="logo/hero.webp" type="image/webp" fetchpriority="high"/>
+
+  <!-- Critical CSS inline (skeleton + above-the-fold essentials) -->
+  <style>
+    /* Prevent FOUT / layout jank while CSS and fonts load */
+    html,body{background:#faf6f1;color:#3a3a3a;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0}
+    .skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+    .skel-card{background:#fff;border:1px solid #e0d6cc;border-radius:12px;padding:1rem;min-height:150px;position:relative;overflow:hidden}
+    .skel-card::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(184,92,56,.08),transparent);animation:shimmer 1.2s infinite}
+    .skel-line{height:12px;background:#f0e6dc;border-radius:6px;margin:.5rem 0}
+    .skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}
+    @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  </style>
+
+  <!-- Fonts loaded non-blocking (swap in once downloaded) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'"/>
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap"/></noscript>
+
   <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Kick off the providers fetch as EARLY as possible + use localStorage
+       as an instant cache so returning users see data on first paint. -->
+  <script>
+  (function(){
+    var CACHE_KEY = 'csp:providers:v1';
+    var URL_ = 'https://script.google.com/macros/s/AKfycbxhDT_XZpAl4C_0QPOr2qJ7VbbcrS2Yi-EeDw97LaYu-JriqryLDUzMwTOGK0sD1PpRew/exec?action=providers';
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && parsed.data && (Date.now() - parsed.ts) < 86400000) {
+          window.__providersCache = parsed.data;
+        }
+      }
+    } catch(e) {}
+    window.__providersPromise = fetch(URL_, { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var data = (j && j.data && j.data.providers) || (j && j.providers) || null;
+        if (data) {
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e){}
+        }
+        return data;
+      })
+      .catch(function(){ return null; });
+  })();
+  </script>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
   <div class="brand">
-    <div class="brand-icon"><img src="logo/logo.JPG" alt="Costa Sur"/></div>
+    <div class="brand-icon"><img src="logo/icon.jpg" alt="Costa Sur" width="40" height="40" decoding="async"/></div>
     <div class="brand-text">
       <strong>Proveedores Costa Sur</strong>
       <span>Directorio comunitario de confianza</span>
@@ -24,7 +77,10 @@
 
 <!-- HERO — full image with search overlay -->
 <div class="hero">
-  <img class="hero-img" src="logo/logo.JPG" alt="Costa Sur"/>
+  <picture>
+    <source srcset="logo/hero.webp" type="image/webp"/>
+    <img class="hero-img" src="logo/hero.jpg" alt="Costa Sur" width="1194" height="672" fetchpriority="high" decoding="async"/>
+  </picture>
   <div class="hero-overlay">
     <h1>Proveedores recomendados en Costa Sur</h1>
     <p>Directorio comunitario con referencias de vecinos.</p>
@@ -33,9 +89,9 @@
       <input type="text" placeholder="Buscar por nombre o servicio..." id="searchInput"/>
     </div>
     <div class="hero-stats">
-      <div class="stat"><strong id="statTotal">0</strong><span>Proveedores</span></div>
+      <div class="stat"><strong id="statTotal">—</strong><span>Proveedores</span></div>
       <div class="stat"><strong>10</strong><span>Categorias</span></div>
-      <div class="stat"><strong id="statCommunities">0</strong><span>Comunidades</span></div>
+      <div class="stat"><strong id="statCommunities">—</strong><span>Comunidades</span></div>
     </div>
   </div>
 </div>
@@ -91,13 +147,15 @@
   <div>
     <div class="grid-header">
       <div class="grid-title" id="gridTitle">Todos los Proveedores</div>
-      <div class="grid-count" id="gridCount">0 proveedores</div>
+      <div class="grid-count" id="gridCount">Cargando proveedores...</div>
     </div>
-    <div class="providers-grid" id="providerGrid">
-      <div class="empty-state">
-        <div class="empty-icon">&#x23F3;</div>
-        <h3>Cargando...</h3>
-      </div>
+    <div class="providers-grid skeleton-grid" id="providerGrid">
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+      <div class="skel-card"><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
     </div>
   </div>
 </div>
@@ -155,9 +213,9 @@
   <div class="detail-modal" id="detailContent"></div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/supabase.js"></script>
-<script src="js/providers.js"></script>
+<script src="js/config.js" defer></script>
+<script src="js/auth.js" defer></script>
+<script src="js/supabase.js" defer></script>
+<script src="js/providers.js" defer></script>
 </body>
 </html>

@@ -20,9 +20,20 @@
   async function fetchProviders(identity) {
     if (!isConfigured()) return getDemoProviders();
 
+    // Reuse the in-flight fetch kicked off from index.html <head> whenever
+    // possible — saves ~300-500ms of waterfall vs. starting after DOMContentLoaded.
+    // Only used when there's no identity (identity forces a per-user query).
+    var hasIdentity = identity && identity.comunidad && identity.casa;
+    if (!hasIdentity && window.__providersPromise) {
+      try {
+        var preloaded = await window.__providersPromise;
+        if (preloaded && preloaded.length) return preloaded;
+      } catch (e) { /* fall through to manual fetch */ }
+    }
+
     try {
       var url = cfg.APPS_SCRIPT_URL + '?action=providers';
-      if (identity && identity.comunidad && identity.casa) {
+      if (hasIdentity) {
         url += '&comunidad=' + encodeURIComponent(identity.comunidad);
         url += '&casa=' + encodeURIComponent(identity.casa);
       }

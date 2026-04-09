@@ -508,20 +508,39 @@
   window._filterCat = filterCat;
   window._closeDetail = closeDetail;
 
-  document.addEventListener('DOMContentLoaded', async function () {
-    var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
-    providers = await window.CostaSurDB.fetchProviders(identity);
-    // Fill missing categories
-    for (var n = 0; n < providers.length; n++) {
-      var cat = providers[n].categoria || providers[n].category || '';
+  function normalizeCategories(list) {
+    for (var n = 0; n < list.length; n++) {
+      var cat = list[n].categoria || list[n].category || '';
       if (!cat) {
-        providers[n].categoria = guessCategory(providers[n].servicio || providers[n].service);
+        list[n].categoria = guessCategory(list[n].servicio || list[n].service);
       }
     }
+    return list;
+  }
+
+  function renderInitial(list) {
+    providers = normalizeCategories(list || []);
+    // Clear skeleton-grid class so real cards use the normal layout.
+    var grid = document.getElementById('providerGrid');
+    if (grid) grid.classList.remove('skeleton-grid');
     applyFilters();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
     setupCardClicks();
     setupModalBackdrops();
     setupSearch();
     setupSidebarToggle();
+
+    // 1. Instant paint from localStorage cache (if available).
+    if (window.__providersCache && window.__providersCache.length) {
+      renderInitial(window.__providersCache.slice());
+    }
+
+    // 2. Live refresh from the prefetched network request.
+    var identity = window.CostaSurAuth ? window.CostaSurAuth.getIdentity() : null;
+    window.CostaSurDB.fetchProviders(identity).then(function (fresh) {
+      if (fresh && fresh.length) renderInitial(fresh);
+    });
   });
 })();
